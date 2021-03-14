@@ -2,6 +2,8 @@
 #include <map>
 #include <iostream>
 #include <functional>
+#include <time.h>
+#include <string.h>
 
 namespace sylar {
 
@@ -54,7 +56,7 @@ namespace sylar {
             
         }
         void format(std::ostream& os, std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) override {
-            os << LogLevel::Tostring(level);
+            os << LogLevel::ToString(level);
         }
     };
 
@@ -109,16 +111,22 @@ namespace sylar {
     class DateTimeFormatItem : public LogFormatter::FormatItem
     {
     public:
-        DateTimeFormatItem(const std::string& str = "")
+        DateTimeFormatItem(const std::string& format = "%Y:%m:%d %H:%M:%S") : m_format(format)
         {
-            
-        }
-        DateTimeFormatItem(const std::string& format = "%Y:%m:%d %H:%M:%S") : m_format(format);
-        {
-
+            if(m_format.empty())
+            {
+                //默认的时间格式
+                m_format = "%Y-%m-%d %H:%M:%S";
+            }
         }
         void format(std::ostream& os, std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) override {
-            os << event->getTime();
+            struct tm tm;
+            time_t time = event->getTime();
+            localtime_r(&time, &tm);
+            char buf[64];
+            strftime(buf, sizeof(buf), m_format.c_str(), &tm);
+            
+            os << buf;
         }
     private:
         //时间还要特殊一些，有自己的格式
@@ -175,6 +183,20 @@ namespace sylar {
         std::string m_string;
     };
 
+    class TabFormatItem : public LogFormatter::FormatItem
+    {
+    public:
+        TabFormatItem(const std::string& str = "")
+        {
+
+        }
+        void format(std::ostream& os, std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) override {
+            os << "\t";
+        }
+    private:
+        std::string m_string;
+    };
+
     LogEvent::LogEvent(const char* file, int32_t line, uint32_t elapse, uint32_t thread_id, uint32_t fiber_id, uint64_t time)
     :m_file(file)
     ,m_line(line)
@@ -189,7 +211,8 @@ namespace sylar {
 // Logger
     Logger::Logger(const std::string& name):m_name(name), m_level(LogLevel::DEBUG)
     {
-        m_formatter.reset(new LogFormatter("%d [%p] %f %l %m %n"));
+        // m_formatter.reset(new LogFormatter("%d%T%t%T[%p]%T[%c]%T<%f:%l>%T%m%n"));
+        m_formatter.reset(new LogFormatter("%d{%Y-%m-%d %H:%M:%S}%T%t%T%F%T[%p]%T[%c]%T<%f:%l>%T%m%n"));
     }
 
     void Logger::addAppender(LogAppender::ptr appender)
@@ -197,7 +220,7 @@ namespace sylar {
         //Logger 自带自定义的 formatter
         if(!appender->getFormatter())
         {
-            appender.setFormatter(m_formatter);
+            appender->setFormatter(m_formatter);
         }
 
         //现在先不考虑线程安全。后面再补上
@@ -259,7 +282,7 @@ namespace sylar {
     }
 
 //LogAppender
-    StdoutLogAppender::log(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event)
+    void StdoutLogAppender::log(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event)
     {
         if(level < m_level)
             return;
@@ -282,26 +305,26 @@ namespace sylar {
         m_filestream.open(m_filename);
 
         //两个感叹号是为了转成 boolean
-        return !!m_filesteam;
+        return !!m_filestream;
     }
 
-    FileLogAppender::log(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event)
+    void FileLogAppender::log(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event)
     {
         if(level < m_level)
             return;
         
-        m_filesteam << m_formatter->format(logger, level, event);
+        m_filestream << m_formatter->format(logger, level, event);
     }
 
 //LogFormatter
     LogFormatter::LogFormatter(const std::string& pattern):m_pattern(pattern)
     {
-
+        this->init();
     }
 
     std::string LogFormatter::format(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event)
     {
-        std::stringsteam ss;
+        std::stringstream ss;
         for(auto& i : m_items)
         {
             i->format(ss, logger, level, event);
@@ -318,10 +341,10 @@ namespace sylar {
         std::string nstr;
         for(size_t i = 0; i< m_pattern.size(); ++i)
         {
-            if(m_pattern[i] != "%")
+            if(m_pattern[i] != '%')
             {
                 nstr.append(1, m_pattern[i]);
-                continue
+                continue;
             }
 
             //末尾说明真的是一个百分号
@@ -342,8 +365,11 @@ namespace sylar {
             std::string fmt;
             while(n < m_pattern.size())
             {
-                if(isspace(m_pattern[n]))
+                //只接受字母
+                if(!fmt_state &&(!isalpha(m_pattern[n]) && m_pattern[n] != '{' && m_pattern[n] != '}'))
                 {
+                    //单字母
+                    str = m_pattern.substr(i + 1, n - i - 1);
                     break;
                 }
 
@@ -359,18 +385,24 @@ namespace sylar {
                         continue;
                     }
                 }
-
-                if(fmt_state == 1)
+                else if(fmt_state == 1)
                 {
-                    if(m_parttern[n] == '}')
+                    if(m_pattern[n] == '}')
                     {
                         fmt = m_pattern.substr(fmt_begin + 1, n - fmt_begin - 1);
-                        fmt_state = 2; //end
+                        fmt_state = 0; //end
+
+                        n ++;
                         break;
                     }
                 }
 
                 n ++;
+                if(n == m_pattern.size()) {
+                    if(str.empty()) {
+                        str = m_pattern.substr(i + 1);
+                    }
+                }
             }
 
             if(fmt_state == 0)
@@ -378,24 +410,15 @@ namespace sylar {
                 if(!nstr.empty())
                 {
                     vec.push_back(std::make_tuple(nstr, "", 0));
+                    nstr.clear();
                 }
-                str = m_pattern.substr(i + 1, n - i - 1);
-                vec.push_back(std::make_tuple(str, fmt, 1);
-                i = n;
+                vec.push_back(std::make_tuple(str, fmt, 1));
+                i = n - 1;
             }
             else if(fmt_state == 1)
             {
                 std::cout << "pattern parse error: " << m_pattern << " - " << m_pattern.substr(i) << std::endl;
                 vec.push_back(std::make_tuple("<<pattern_error>>", fmt, 0));
-            }
-            else if (fmt_state == 2)
-            {
-                if(!nstr.empty())
-                {
-                    vec.push_back(std::make_tuple(nstr, "", 0));
-                }
-                vec.push_back(std::make_tuple(str, fmt, 1))
-                i = n;
             }
         }
 
@@ -414,10 +437,10 @@ namespace sylar {
         //%d -- 时间格式
         //%f -- 文件名
         //%l -- 行号
-        static std::map<std::string, std::function<FormatItem::ptr(const std::string& str>> s_format_items = {
+        static std::map<std::string, std::function<FormatItem::ptr(const std::string& str)>> s_format_items = {
             //匿名函数指针
-            #define XX(str, C)\
-            {str, [](const std::string& fmt) {return FormatItem::ptr(new /C(fmt));}}
+            #define XX(str, C) \
+            {#str, [](const std::string& fmt) {return FormatItem::ptr(new C(fmt));}}
 
             XX(m, MessageFormatItem),
             XX(p, LevelFormatItem),
@@ -428,6 +451,8 @@ namespace sylar {
             XX(d, DateTimeFormatItem),
             XX(f, FilenameFormatItem),
             XX(l, LineFormatItem),
+            XX(T, TabFormatItem),
+            XX(F, FiberIdFormatItem),
 
             #undef XX
         };
@@ -435,7 +460,7 @@ namespace sylar {
         for(auto& i : vec){
             //说明是纯字符串
             if(std::get<2>(i) == 0) {
-                m_items.push_back(FormItem::ptr(new StringFormatItem(std::get<0>(i))));
+                m_items.push_back(FormatItem::ptr(new StringFormatItem(std::get<0>(i))));
             }
             else
             {
@@ -450,7 +475,7 @@ namespace sylar {
                 }
             }
 
-            std::cout << std::get<0>(i) << " - " << std::get<1>(i) << " - " << std::get<2>(i) << std::endl;
+            std::cout << "(" << std::get<0>(i) << ") - (" << std::get<1>(i) << ") - (" << std::get<2>(i) << ") " << std::endl;
         }
     }
 }
