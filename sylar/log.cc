@@ -34,6 +34,29 @@ namespace sylar {
         return "UNKNOW";
     }
 
+    LogEvent::~LogEvent()
+    {
+
+    }
+
+    LogEventWrap::LogEventWrap(LogEvent::ptr e) : m_event(e)
+    {
+
+    }
+
+    //在析构的时候，把LogEvent的ss写进去
+    LogEventWrap::~LogEventWrap()
+    {
+        if(m_event) {
+            m_event->getLogger()->log(m_event->getLevel(), m_event);
+        }
+    }
+
+    std::stringsteam& LogEventWrap::getSS()
+    {
+        return m_event->getSS();
+    }
+
     // 下面是 Log4j 格式的各种零件
     class MessageFormatItem : public LogFormatter::FormatItem
     {
@@ -197,8 +220,10 @@ namespace sylar {
         std::string m_string;
     };
 
-    LogEvent::LogEvent(const char* file, int32_t line, uint32_t elapse, uint32_t thread_id, uint32_t fiber_id, uint64_t time)
-    :m_file(file)
+    LogEvent::LogEvent(std::shared_ptr<Logger> logger, LogLevel::Level level, const char* file, int32_t line, uint32_t elapse, uint32_t thread_id, uint32_t fiber_id, uint64_t time)
+    :m_logger(logger)
+    ,m_level(level)
+    ,m_file(file)
     ,m_line(line)
     ,m_elapse(elapse)
     ,m_threadId(thread_id)
@@ -417,7 +442,8 @@ namespace sylar {
             }
             else if(fmt_state == 1)
             {
-                std::cout << "pattern parse error: " << m_pattern << " - " << m_pattern.substr(i) << std::endl;
+                // 打开可调试
+                // std::cout << "pattern parse error: " << m_pattern << " - " << m_pattern.substr(i) << std::endl;
                 vec.push_back(std::make_tuple("<<pattern_error>>", fmt, 0));
             }
         }

@@ -9,15 +9,31 @@
 #include <fstream>
 #include <vector>
 
+//定义几个让日志好用的宏。一般就是用这种方式来简写。就不用定义 Event 了。当然用函数也可以
+//智能指针真好用
+#define SYLAR_LOG_LEVEL(logger, level) \
+	if(logger->getLevel() <= level) { \
+		aylar::LogEventWrap(sylar::LogEvent::ptr(new sylar::LogEvent(logger, level, \
+				__FILE__, __LINE__, 0, sylar::GetThreadId(), \
+			sylar::GetFiberId(), time(0)))).getSS()
+
+#define SYLAR_LOG_DEBUG(logger) SYLAR_LOG_LEVEL(logger, sylar::LogLevel::DEBUG)
+#define SYLAR_LOG_INFO(logger) SYLAR_LOG_LEVEL(logger, sylar::LogLevel::INFO)
+#define SYLAR_LOG_WARN(logger) SYLAR_LOG_LEVEL(logger, sylar::LogLevel::WARN)
+#define SYLAR_LOG_ERROR(logger) SYLAR_LOG_LEVEL(logger, sylar::LogLevel::ERROR)
+#define SYLAR_LOG_FATAL(logger) SYLAR_LOG_LEVEL(logger, sylar::LogLevel::FATAL)
+
 namespace sylar {
 
 class Logger;
+class LogLevel;
 
 //日志的本体
 class LogEvent {
 public:
 	typedef std::shared_ptr<LogEvent> ptr;
-	LogEvent(const char* file, int32_t m_line, uint32_t elapse, uint32_t thread_id, uint32_t fiber_id, uint64_t time);
+	LogEvent(std::shared_ptr<Logger> logger, LogLevel::Level level, const char* file, int32_t m_line, uint32_t elapse, uint32_t thread_id, uint32_t fiber_id, uint64_t time);
+	~LogEvent();
 
 	const char* getFile() const { return m_file; }
 	int32_t getLine() const { return m_line; }
@@ -26,8 +42,12 @@ public:
 	uint32_t getFiberId() const { return m_fiberId; }
 	uint32_t getTime() const { return m_time; }
 	std::string getContent() const { return m_ss.str(); }
+	std::shared_ptr<Logger> getLogger() const {return m_logger;}
+	LogLevel::Level getLevel() const return {return m_level;}
 
 	std::stringstream& getSS() {return m_ss;}
+	//有些人更喜欢这种方式
+	void format(const char* fmt, ....);
 private:
 	// C++11 之后，可以在类里面直接这样初始化了。。
 	const char* m_file = nullptr;
@@ -44,6 +64,21 @@ private:
 	//内容，用ss stream 可以用流，会方便很多
 	// std:string m_content;
 	std::stringstream m_ss;
+
+	//还要知道自己要写的logger（皆因shared_ptr，需要用到的wrap）
+	std::shared_ptr<Logger> m_logger;
+	LogLevel::Level m_level;
+};
+
+//这个类，是由于我们使用了 shared_ptr，所以直接用 LogEvent 是不合适的（因为 stringstream会被自动干掉）
+class LogEventWrap {
+public:
+	LogEventWrap(LogEvent::ptr e);
+	~LogEventWrap();
+
+	std::stringsteam& getSS();
+private:
+	LogEvent::ptr m_event;
 };
 
 //日志等级
