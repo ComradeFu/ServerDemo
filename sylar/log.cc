@@ -330,7 +330,7 @@ namespace sylar {
 //
     FileLogAppender::FileLogAppender(std::string filename):m_filename(filename)
     {
-
+        reopen();
     }
 
     bool FileLogAppender::reopen()
@@ -516,5 +516,15 @@ namespace sylar {
 
             std::cout << "(" << std::get<0>(i) << ") - (" << std::get<1>(i) << ") - (" << std::get<2>(i) << ") " << std::endl;
         }
+    }
+
+    LoggerManager::LoggerManager() {
+        m_root.reset(new Logger);
+        m_root->addAppender(LogAppender::ptr(new StdoutLogAppender));
+    }
+
+    Logger::ptr LoggerManager::getLogger(const std::string& name) {
+        auto it = m_loggers.find(name);
+        return it == m_loggers.end() ? m_root : it->second;
     }
 }

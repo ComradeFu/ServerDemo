@@ -32,5 +32,8 @@ int main(int argc, char** argv)
 
     SYLAR_LOG_FMT_ERROR(logger, "test macro fmt error %s", "aa");
 
+    auto l = sylar::LoggerMgr::GetInstance()->getLogger("xx");
+    SYLAR_LOG_INFO(l) << "xx";
+
     return 0;
 }

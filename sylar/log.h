@@ -8,6 +8,8 @@
 #include <sstream>
 #include <fstream>
 #include <vector>
+#include <map>
+#include "singleton.h"
 
 //定义几个让日志好用的宏。一般就是用这种方式来简写。就不用定义 Event 了。当然用函数也可以
 // stringsteam a = SYLAR_LOG_DEBUG(logger); a << "test logger debug.";wrap类被回收的时候会自动把ss写进logger
@@ -220,6 +222,20 @@ private:
 	std::list<LogAppender::ptr> m_appenders; //输出到哪里的一个集合
 	LogFormatter::ptr m_formatter; //有些logger appender 不需要自己的formater是直接输出
 };
+
+class LoggerManager {
+public:
+	LoggerManager();
+	Logger::ptr getLogger(const std::string& name);
+
+	//快速初始化应该初始化的logger
+	void init();
+private:
+	std::map<std::string, Logger::ptr> m_loggers;
+	Logger::ptr m_root; //默认的logger
+};
+
+typedef sylar::Singleton<LoggerManager> LoggerMgr;
 
 }
 
