@@ -9,11 +9,13 @@
 #include <fstream>
 #include <vector>
 #include <map>
+#include "util.h"
 #include "singleton.h"
 
 //定义几个让日志好用的宏。一般就是用这种方式来简写。就不用定义 Event 了。当然用函数也可以
 // stringsteam a = SYLAR_LOG_DEBUG(logger); a << "test logger debug.";wrap类被回收的时候会自动把ss写进logger
 //智能指针真好用
+//下面的前缀 SYLAR，是为了以后跟别的库进行整合的话，会起冲突
 #define SYLAR_LOG_LEVEL(logger, level) \
 	if(logger->getLevel() <= level) \
 		sylar::LogEventWrap(sylar::LogEvent::ptr(new sylar::LogEvent(logger, level, \
@@ -38,6 +40,8 @@
 #define SYLAR_LOG_FMT_ERROR(logger, fmt, ...) SYLAR_LOG_FMT_LEVEL(logger, sylar::LogLevel::ERROR, fmt, __VA_ARGS__)
 #define SYLAR_LOG_FMT_FATAL(logger, fmt, ...) SYLAR_LOG_FMT_LEVEL(logger, sylar::LogLevel::FATAL, fmt, __VA_ARGS__)
 
+//定义一个宏吧，这样方便一点
+#define SYLAR_LOG_ROOT() sylar::LoggerMgr::GetInstance()->getRoot()
 namespace sylar {
 
 class Logger;
@@ -230,13 +234,13 @@ public:
 
 	//快速初始化应该初始化的logger
 	void init();
+	Logger::ptr getRoot() const { return m_root; }
 private:
 	std::map<std::string, Logger::ptr> m_loggers;
 	Logger::ptr m_root; //默认的logger
 };
 
 typedef sylar::Singleton<LoggerManager> LoggerMgr;
-
 }
 
 #endif
