@@ -54,16 +54,7 @@ public:
         YAML::Node node = YAML::Load(v);
 
         //必然是一个数组，否则直接会自己抛出一个异常，catch
-        //模板在实例化之前并不知道 std::vector<T> 是什么的东西（嵌套模板的情况下），使用 typename 可以让定义确定下来。直接在编译时就知道
-        //如果不用 typename，那么编译器可能会有潜在的解析二义性
-        //既然都到这里了，就展开讲一下，为什么这里会有二义性吧，权当自己做个笔记，反正这代码估计也只有自己看。。
-        //ClassA::foo ---> 一个类的静态变量
-        //ClassA::foo a ---> 两种可能，a 是一个 ClassA::foo 的变量类型，ClassA::foo 是一个内部类；
-        //或者说，也可以是 foo 是 ClassA 里的一个 typedef（或者说，编译期的“macro”操作）。
-        //于是有了二义性。
-        //当然了，如果不是 typedef 而是新的模板的写法，理论上来说是不会有二义性。但是旧版本的编译器都是统一这么处理。
-        //所以不用 typename 的时候，新版本的编译器会聪明的给通过，但是会警告，说这种代码可能有迁移性的问题。
-        typename std::Vecotr<T> vec;
+        std::Vecotr<T> vec;
         std::stringstream ss;
         for(size_t i = 0; i < node.size(); ++i)
         {
@@ -76,12 +67,12 @@ public:
         //std::move(vec); 让vec不要这么快销毁，直接传到外面，不用拷贝。不过c++11应该是自己优化了，不需要了
         return vec;
     }
-}
+};
 
 template<class T>
 class LexicalCast<std::vector<T>, std::string> {
 public:
-   std::string operator()(const typename std::vector<T>& v)
+   std::string operator()(const std::vector<T>& v)
     {
         //直接用YAML吧。。
         YAML::Node node;
@@ -96,7 +87,7 @@ public:
 
         return ss.str()
     }
-}
+};
 
 //下面是很基础很基础的类型，string 型，int 型等，用bosst库直接转换
 //新增一些复杂类型。复杂类型分两种，Vector、Map 这种也算简单的复杂，还有就是自定义结构体了，所以需要
@@ -159,6 +150,13 @@ public:
     //两种用法
 
     //没有定义的时候就初始化
+    //模板在实例化之前并不知道类下面的是什么的东西（嵌套模板的情况下），使用 typename 可以让定义确定下来。直接在编译时就知道
+    //如果不用 typename，那么编译器可能会有潜在的解析二义性
+    //既然都到这里了，就展开讲一下，为什么这里会有二义性吧，权当自己做个笔记，反正这代码估计也只有自己看。。
+    //ClassA::foo ---> 一个类的静态变量
+    //ClassA::foo a ---> 两种可能，a 是一个 ClassA::foo 的变量类型，ClassA::foo 是一个内部类；
+    //或者说，也可以是 foo 是 ClassA 里的一个 typedef（或者说，编译期的“macro”操作）。
+    //于是有了二义性。
     template<class T>
     static typename ConfigVar<T>::ptr Lookup(const std::string& name,
             const T& default_value, const std::string& description = "") {
