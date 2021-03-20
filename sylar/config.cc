@@ -52,9 +52,10 @@ void Config::LoadFromYaml(const YAML::Node& root) {
             continue;
         
         std::transform(key.begin(), key.end(), key.begin(), ::tolower);
-        std::cout << "lookup key:" << key << std::endl;
         ConfigVarBase::ptr var = LookupBase(key);
         
+        //约定高于配置。所以是，配置去修改代码里的“约定”（也可以理解是内置配置了。。）
+        //约定里没有的，配置都懒得解析的
         if(var)
         {
             std::cout << "key: " << key << ",val: " << i.second << std::endl;

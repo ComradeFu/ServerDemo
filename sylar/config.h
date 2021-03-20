@@ -34,8 +34,79 @@ protected: //基类能遗传
     std::string m_description;
 };
 
-//下面是很基础很基础的类型，string 型，int 型
+//F from_type, T to_type
+template<class F, class T>
+class LexicalCast {
+public:
+    T operator()(const F& v)
+    {
+        return boost::lexical_cast<T>(v);
+    }
+};
+
+//常用内置复杂结构的偏特化，那么这里的命名Lexical可能不太准确，没关系了就这样吧。。
 template<class T>
+class LexicalCast<std::string, std::vector<T>> {
+public:
+    std::vector<T> operator()(const std::string& v)
+    {
+        //直接用YAML吧。。
+        YAML::Node node = YAML::Load(v);
+
+        //必然是一个数组，否则直接会自己抛出一个异常，catch
+        //模板在实例化之前并不知道 std::vector<T> 是什么的东西（嵌套模板的情况下），使用 typename 可以让定义确定下来。直接在编译时就知道
+        //如果不用 typename，那么编译器可能会有潜在的解析二义性
+        //既然都到这里了，就展开讲一下，为什么这里会有二义性吧，权当自己做个笔记，反正这代码估计也只有自己看。。
+        //ClassA::foo ---> 一个类的静态变量
+        //ClassA::foo a ---> 两种可能，a 是一个 ClassA::foo 的变量类型，ClassA::foo 是一个内部类；
+        //或者说，也可以是 foo 是 ClassA 里的一个 typedef（或者说，编译期的“macro”操作）。
+        //于是有了二义性。
+        //当然了，如果不是 typedef 而是新的模板的写法，理论上来说是不会有二义性。但是旧版本的编译器都是统一这么处理。
+        //所以不用 typename 的时候，新版本的编译器会聪明的给通过，但是会警告，说这种代码可能有迁移性的问题。
+        typename std::Vecotr<T> vec;
+        std::stringstream ss;
+        for(size_t i = 0; i < node.size(); ++i)
+        {
+            ss.str("");
+            ss << node[i];
+            //下面为什么不用typename呢？因为它是模板类的子类型，所以不用，说来话又长了。。
+            vec.push_back(LexicalCast<std::string, T>()(ss.str()));
+        }
+
+        //std::move(vec); 让vec不要这么快销毁，直接传到外面，不用拷贝。不过c++11应该是自己优化了，不需要了
+        return vec;
+    }
+}
+
+template<class T>
+class LexicalCast<std::vector<T>, std::string> {
+public:
+   std::string operator()(const typename std::vector<T>& v)
+    {
+        //直接用YAML吧。。
+        YAML::Node node;
+        for(auto& i : v)
+        {
+            //自己会转成sequence类型，变成YAML节点放回去
+            node.push_back(YAML::Load(LexicalCast<T, std::string>()(i)));
+        }
+
+        std::stringstream ss;
+        ss << node; //利用node自己的 <<
+
+        return ss.str()
+    }
+}
+
+//下面是很基础很基础的类型，string 型，int 型等，用bosst库直接转换
+//新增一些复杂类型。复杂类型分两种，Vector、Map 这种也算简单的复杂，还有就是自定义结构体了，所以需要
+//FromStr ToStr，就是 “仿函数”类（重载了函数括号的类），序列化跟反序列化
+//FromStr T operator()(const std::string&)
+//ToStr std::string operator()(const T&)，得是一个模板
+//下面用到的默认仿函数，是template 特例化
+template<class T, 
+    class FromStr = LexicalCast<std::string, T>, 
+    class ToStr = LexicalCast<T, std::string>>
 class ConfigVar : public ConfigVarBase {
 public:
     typedef std::shared_ptr<ConfigVar> ptr;
@@ -49,7 +120,8 @@ public:
     virtual std::string toString() override {
         try
         {
-            return boost::lexical_cast<std::string>(m_val);
+            // return boost::lexical_cast<std::string>(m_val);
+            return ToStr()(m_val); //ToStr(m_val)
         }
         catch(const std::exception& e)
         {
@@ -63,7 +135,8 @@ public:
     virtual bool fromString(const std::string& val) override {
         try 
         {
-            m_val = boost::lexical_cast<T>(val);
+            // m_val = boost::lexical_cast<T>(val);
+            setValue(FromStr()(val));
         }
         catch(std::exception& e) {
             SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "ConfigVar::toString exception"
