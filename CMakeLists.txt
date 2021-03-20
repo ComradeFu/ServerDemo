@@ -11,8 +11,7 @@ include_directories(.)
 #这个也不用，yaml cpp 是 make install 到 usr 了
 #lib64 居然不是自动引入。。
 link_directories(/usr/local/lib64/)
-
-# find_library(YAMLCPP libyaml-cpp.a)
+# find_library(YAMLCPP yaml-cpp)
 # message(DEBUG ${YAMLCPP})
 
 set(LIB_SRC 
@@ -27,7 +26,8 @@ add_library(sylar SHARED ${LIB_SRC})
 
 add_executable(test tests/test.cc)
 add_dependencies(test sylar)
-target_link_libraries(test sylar)
+#这个为什么也要加 ${YAMLCPP}？不知道，不然会报错，额
+target_link_libraries(test sylar yaml-cpp)
 
 add_executable(test_config tests/test_config.cc)
 add_dependencies(test_config sylar)

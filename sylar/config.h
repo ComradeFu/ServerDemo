@@ -6,6 +6,7 @@
 #include <sstream> //序列化用
 #include <boost/lexical_cast.hpp>
 #include "log.h"
+#include <yaml-cpp/yaml.h>
 
 namespace sylar {
 
@@ -15,7 +16,8 @@ public:
     ConfigVarBase(const std::string& name, const std::string& description = "")
         :m_name(name)
         ,m_description(description) {
-
+            // key 只有小写，没有大写
+            std::transform(m_name.begin(), m_name.end(), m_name.begin(), ::tolower);
     }
     //虚析构函数，让它释放
     virtual ~ConfigVarBase() {}
@@ -94,7 +96,7 @@ public:
         }
 
         //判断是不是非法，也可以大写统一转换小写
-        if(name.find_first_not_of("abcdefghijklmopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ._012345678")
+        if(name.find_first_not_of("abcdefghijklmopqrstuvwxyz._012345678")
                 != std::string::npos) {
             SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "Lookup name invalid " << name;
             throw std::invalid_argument(name);
@@ -115,6 +117,10 @@ public:
         //找到了还要去转成对应的类型
         return std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
     }
+
+    static void LoadFromYaml(const YAML::Node& root);
+    static ConfigVarBase::ptr LookupBase(const std::string& name);
+
 private:
     //singleton, so use s_ for prefix
     static ConfigVarMap s_datas;
