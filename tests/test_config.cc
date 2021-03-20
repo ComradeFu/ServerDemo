@@ -1,5 +1,5 @@
-#include "sylar/config.h"
-#include "sylar/log.h"
+#include "../sylar/config.h"
+#include "../sylar/log.h"
 #include <yaml-cpp/yaml.h>
 
 sylar::ConfigVar<int>::ptr g_int_value_config = 
