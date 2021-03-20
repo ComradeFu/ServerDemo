@@ -21,7 +21,7 @@ static void ListAllMember(const std::string& prefix,
                             const YAML::Node& node,
                             std::list<std::pair<std::string, const YAML::Node>>& output)
 {
-        if(prefix.find_first_not_of("abcdefghijklmopqrstuvwxyz._012345678")
+        if(prefix.find_first_not_of("abcdefghijklmnopqrstuvwxyz._012345678")
                 != std::string::npos) {
             SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "Config invalid name : " << prefix << " : " << node;
             return;

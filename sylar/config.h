@@ -54,7 +54,7 @@ public:
         YAML::Node node = YAML::Load(v);
 
         //必然是一个数组，否则直接会自己抛出一个异常，catch
-        std::Vecotr<T> vec;
+        std::vector<T> vec;
         std::stringstream ss;
         for(size_t i = 0; i < node.size(); ++i)
         {
@@ -85,7 +85,7 @@ public:
         std::stringstream ss;
         ss << node; //利用node自己的 <<
 
-        return ss.str()
+        return ss.str();
     }
 };
 
@@ -167,7 +167,7 @@ public:
         }
 
         //判断是不是非法，也可以大写统一转换小写
-        if(name.find_first_not_of("abcdefghijklmopqrstuvwxyz._012345678")
+        if(name.find_first_not_of("abcdefghijklmnopqrstuvwxyz._012345678")
                 != std::string::npos) {
             SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "Lookup name invalid " << name;
             throw std::invalid_argument(name);
