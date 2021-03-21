@@ -243,7 +243,7 @@ public:
         for(auto it = node.begin();
                 it != node.end(); ++ it)
         {
-            // ss.str("");
+            ss.str(""); //重置
             ss << it->second;
             //目前暂且只支持简单的 字符串key
             vec.insert(std::make_pair(it->first.Scalar(), LexicalCast<std::string, T>()(ss.str())));
@@ -288,7 +288,7 @@ public:
         for(auto it = node.begin();
                 it != node.end(); ++ it)
         {
-            // ss.str("");
+            ss.str(""); //重置
             ss << it->second;
             //目前暂且只支持简单的 字符串key
             vec.insert(std::make_pair(it->first.Scalar(), LexicalCast<std::string, T>()(ss.str())));
