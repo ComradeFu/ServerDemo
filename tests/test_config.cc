@@ -122,7 +122,7 @@ public:
     bool m_sex = 0;
 
     std::string toString() const {
-        std::stringsteam ss;
+        std::stringstream ss;
         ss << "[Person name=" << m_name
             << " age=" << m_age
             << " sex=" << m_sex
@@ -130,7 +130,7 @@ public:
 
         return ss.str();
     }
-}
+};
 
 namespace sylar {
 //做个偏特化的序列方法来测试Person
@@ -162,7 +162,7 @@ public:
         node["age"] = p.m_age;
         node["sex"] = p.m_sex;
 
-        std::streanstream ss;
+        std::stringstream ss;
         ss << node;
 
         return ss.str();
@@ -190,7 +190,7 @@ void test_class()
         auto m = g_person_map->getValue(); \
         for(auto& i : m) \
         { \
-            SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << prefix << ": " << i.first << " - " << i.sencond.toString(); \
+            SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << prefix << ": " << i.first << " - " << i.second.toString(); \
         } \
         SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << prefix << ": size=" << m.size(); \
     }

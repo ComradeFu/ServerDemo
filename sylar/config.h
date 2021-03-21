@@ -35,7 +35,7 @@ public:
     virtual std::string toString() = 0;
     //解析
     virtual bool fromString(const std::string& val) = 0;
-    virtual std::string getTypeName() = 0; //不定义出来，派生类特有方法，基类指针将访问不到！
+    virtual std::string getTypeName() const = 0; //不定义出来，派生类特有方法，基类指针将访问不到！
 protected: //基类能遗传
     std::string m_name;
     std::string m_description;
