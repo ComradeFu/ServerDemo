@@ -5,7 +5,7 @@ namespace sylar {
 //static 成员变量必须在类外初始化一次
 Config::ConfigVarMap Config::s_datas;
 
-//查找当前有无这个配置项，有的话返回它
+//查找当前有无这个配置项，有的话返回它，这个方法特殊在，不需要T，直接Base指针
 ConfigVarBase::ptr Config::LookupBase(const std::string& name)
 {
     auto it = s_datas.find(name);
@@ -61,6 +61,7 @@ void Config::LoadFromYaml(const YAML::Node& root) {
             std::cout << "key: " << key << ",val: " << i.second << std::endl;
             if(i.second.IsScalar())
             {
+                std::cout <<
                 //录入
                 var->fromString(i.second.Scalar());
             }

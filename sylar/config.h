@@ -35,6 +35,7 @@ public:
     virtual std::string toString() = 0;
     //解析
     virtual bool fromString(const std::string& val) = 0;
+    virtual std::string getTypeName() = 0; //不定义出来，派生类特有方法，基类指针将访问不到！
 protected: //基类能遗传
     std::string m_name;
     std::string m_description;
@@ -360,8 +361,9 @@ public:
             setValue(FromStr()(val));
         }
         catch(std::exception& e) {
-            SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "ConfigVar::toString exception"
-                << e.what() << " convert string to " << typeid(m_val).name();
+            SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "ConfigVar::fromString exception"
+                << e.what() << " convert string to " << typeid(m_val).name()
+                << " - " << val;
         }
 
         return false;
@@ -369,6 +371,8 @@ public:
 
     const T getValue() const { return m_val; }
     void setValue(const T& v) { m_val = v; }
+
+    std::string getTypeName() const override { return typeid(T).name(); }
 private:
     T m_val;
 };
@@ -393,10 +397,31 @@ public:
     template<class T>
     static typename ConfigVar<T>::ptr Lookup(const std::string& name,
             const T& default_value, const std::string& description = "") {
-        auto tmp = Lookup<T>(name);
-        if(tmp) {
-            SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "Lookup name=" << name << " exists";
-            return tmp;
+
+        //tmp 是空的的话，两种情况。一种是真的是空，另一种是类型不一样。
+        // auto tmp = Lookup<T>(name);
+        // if(tmp) {
+        //     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "Lookup name=" << name << " exists";
+        //     return tmp;
+        // }
+
+        auto it = s_datas.find(name);
+        // 这个才是真的没有
+        if(it != s_datas.end())
+        {
+            auto tmp = std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
+            if(tmp)
+            {
+                SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "Lookup name=" << name << " exists";
+                return tmp;
+            }
+            else
+            {
+                SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "Lookup name=" << name << "exists but type not "
+                    << typeid(T).name() << " real_type=" << it->second->getTypeName()
+                    << " " << it->second->toString();
+                return nullptr;
+            }
         }
 
         //判断是不是非法，也可以大写统一转换小写
@@ -418,11 +443,13 @@ public:
         auto it = s_datas.find(name);
         if(it == s_datas.end())
             return nullptr;
-        //找到了还要去转成对应的类型
+        //找到了还要去转成对应的类型（从base类型指针）
         return std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
     }
 
     static void LoadFromYaml(const YAML::Node& root);
+
+    //不需要T的Base方法
     static ConfigVarBase::ptr LookupBase(const std::string& name);
 
 private:
