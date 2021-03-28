@@ -145,7 +145,7 @@ namespace sylar {
         void format(std::ostream& os, std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) override {
             // os << logger->getName();
             // 由于可能这个 logger 是用 root 来输出的，所以要换一种才能拿出最原始的
-            event->getLogger()->getName();
+            os << event->getLogger()->getName();
         }
     };
 
@@ -300,7 +300,7 @@ namespace sylar {
             return;
         }
 
-        m_formatter = new_val；
+        m_formatter = new_val;
     }
 
     std::string Logger::toYamlString()
@@ -475,7 +475,7 @@ namespace sylar {
 
         if(m_level != LogLevel::UNKNOW)
             node["level"] = LogLevel::ToString(m_level);
-            
+
         if(m_formatter)
         {
             node["formatter"] = m_formatter->getPattern();
@@ -673,7 +673,7 @@ namespace sylar {
 
         Logger::ptr logger(new Logger(name));
         logger->m_root = m_root;
-        m_loggers[name] = logger
+        m_loggers[name] = logger;
 
         return logger;
     }
@@ -698,7 +698,7 @@ namespace sylar {
         int type = 0; //1 File, 2 Stdout
         LogLevel::Level level = LogLevel::UNKNOW;
         std::string formatter;
-        std::string m_file; //如果是文件
+        std::string file; //如果是文件
 
         //配置事件那里有等于号的判断
         bool operator==(const LogAppenderDefine& oth) const 
@@ -749,7 +749,7 @@ namespace sylar {
             for(size_t i = 0; i < node.size(); ++i)
             {
                 auto n = node[i];
-                if(n["name"].IsDefined())
+                if(!n["name"].IsDefined())
                 {
                     //防止自己循环报错
                     std::cout << "log config error: name is null, " << n << std::endl;  
@@ -764,7 +764,7 @@ namespace sylar {
                     ld.formatter = n["formatter"].as<std::string>();
                 }
 
-                if(n["appenders"].isDefined())
+                if(n["appenders"].IsDefined())
                 {
                     for(size_t x = 0; x < n["appenders"].size(); ++x)
                     {
@@ -810,7 +810,7 @@ namespace sylar {
 
             return vec;
         }
-    }
+    };
 
     template<>
     class LexicalCast<std::set<LogDefine>, std::string>
@@ -856,17 +856,17 @@ namespace sylar {
 
                     n["appenders"].push_back(na);
                 }
+
+                node.push_back(n);
             }
 
-            node.push_back(n);
-            
             std::stringstream ss;
             ss << node;
             return ss.str();
         }
-    }
+    };
 
-    sylar::ConfigVar<std::set<LogDefine>> g_log_defines =
+    sylar::ConfigVar<std::set<LogDefine>>::ptr g_log_defines =
         sylar::Config::Lookup("logs", std::set<LogDefine>(), "logs config");
 
     //用来做初始化入口，before main function.
@@ -874,26 +874,25 @@ namespace sylar {
     {
         LogIniter()
         {
-            g_log_defines.addListener(0xF1E231, [](const std::set<LogDefine>& old_value,
+            g_log_defines->addListener(0xF1E231, [](const std::set<LogDefine>& old_value,
                             const std::set<LogDefine>& new_value){
                 
-                SYLAR_LOG_NAME(SYLAR_LOG_ROOT()) << "on_loger_conf_changed";
+                SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "on_loger_conf_changed";
                 for(auto& i : new_value )
                 {
-                    auto it = old_value.find(i->name);
+                    auto it = old_value.find(i);
                     sylar::Logger::ptr logger;
                     if(it == old_value.end())
                     {
                         //没有就是新的
                         logger = SYLAR_LOG_NAME(i.name);
-                        
                     }
                     else
                     {
                         if(!(i == *it))
                         {
                             //修改的logger
-                            logger = SYLAY_LOG_NAME(i.name);
+                            logger = SYLAR_LOG_NAME(i.name);
                         }
                         else
                         {
@@ -916,7 +915,7 @@ namespace sylar {
                         sylar::LogAppender::ptr ap;
                         if(a.type == 1)
                         {
-                            ap.reset(new FileLogAppender(i.file));
+                            ap.reset(new FileLogAppender(a.file));
                         }
                         else if(a.type == 2)
                         {
@@ -938,18 +937,18 @@ namespace sylar {
                         //比如又删又增，那可能持有的就不一样了
                         //所以只是类似 disable 之类的类似删除
                         auto logger = SYLAR_LOG_NAME(i.name);
-                        logger->setLevel((LogLevel::Level)100));
+                        logger->setLevel((LogLevel::Level)100);
                         logger->clearAppenders(); //会转root 的 appender
                     }
                 }
-            })
+            });
         }
     };
     
     //利用全局结构体，在main函数之前初始化，并在构造函数里面做好逻辑（比如增加一些事件）
     static LogIniter __log_init;
 
-    void LoggerManger::init()
+    void LoggerManager::init()
     {
 
     }

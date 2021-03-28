@@ -9,7 +9,7 @@ namespace sylar {
 //查找当前有无这个配置项，有的话返回它，这个方法特殊在，不需要T，直接Base指针
 ConfigVarBase::ptr Config::LookupBase(const std::string& name)
 {
-    auto s_datas = GetDatas();
+    auto& s_datas = GetDatas();
     auto it = s_datas.find(name);
     return it == s_datas.end() ? nullptr : it->second;
 }
@@ -60,7 +60,6 @@ void Config::LoadFromYaml(const YAML::Node& root) {
         //约定里没有的，配置都懒得解析的
         if(var)
         {
-            std::cout << "key: " << key << ",val: " << i.second << std::endl;
             if(i.second.IsScalar())
             {
                 std::cout <<

@@ -398,11 +398,12 @@ namespace sylar
                 return;
             }
 
-            m_val = v;
             for (auto &i : m_cbs)
             {
                 i.second(m_val, v);
             }
+
+            m_val = v;
         }
 
         std::string getTypeName() const override { return typeid(T).name(); }
@@ -457,14 +458,13 @@ namespace sylar
         static typename ConfigVar<T>::ptr Lookup(const std::string &name,
                                                  const T &default_value, const std::string &description = "")
         {
-
             //tmp 是空的的话，两种情况。一种是真的是空，另一种是类型不一样。
             // auto tmp = Lookup<T>(name);
             // if(tmp) {
             //     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "Lookup name=" << name << " exists";
             //     return tmp;
             // }
-            auto s_datas = GetDatas();
+            auto& s_datas = GetDatas();
             auto it = s_datas.find(name);
             // 这个才是真的没有
             if (it != s_datas.end())
@@ -501,7 +501,7 @@ namespace sylar
         template <class T>
         static typename ConfigVar<T>::ptr Lookup(const std::string &name)
         {
-            auto s_datas = GetDatas();
+            auto& s_datas = GetDatas();
             auto it = s_datas.find(name);
             if (it == s_datas.end())
                 return nullptr;

@@ -62,7 +62,7 @@ void print_yaml(const YAML::Node& node, int level)
 
 void test_yaml() {
     //加载进来源文件
-    YAML::Node root = YAML::LoadFile("./bin/test.yml");
+    YAML::Node root = YAML::LoadFile("./bin/conf/test.yml");
     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << root;
 
     print_yaml(root, 0);
@@ -102,7 +102,7 @@ void test_config() {
     XX_M(g_int_map_value_config, int_map, before);
     XX_M(g_int_unordered_map_value_config, int_unordered_map, before);
 
-    YAML::Node root = YAML::LoadFile("./bin/test.yml");
+    YAML::Node root = YAML::LoadFile("./bin/conf/test.yml");
     sylar::Config::LoadFromYaml(root);
 
     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "after: " << g_int_value_config->getValue();
@@ -212,7 +212,7 @@ void test_class()
     XX_PM(g_person_map, "class,map before");
     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "before: " << g_person_vec_map->toString();
 
-    YAML::Node root = YAML::LoadFile("./bin/test.yml");
+    YAML::Node root = YAML::LoadFile("./bin/conf/test.yml");
     sylar::Config::LoadFromYaml(root);
     
     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "after: " << g_person->getValue().toString() << " - " << g_person->toString();
@@ -223,15 +223,15 @@ void test_class()
 void test_log()
 {
     static sylar::Logger::ptr system_log = SYLAR_LOG_NAME("system");
-    SYLAR_LOG_INFO(system_log) << "hello system" << sed:endl;
+    SYLAR_LOG_INFO(system_log) << "hello system" << std::endl;
 
-    std:cout << sylar::LoggerManager::GetInstance()->toYamlString() << std::endl;
-    TAML::Node root = YAML::LoadFile("./bin/conf/log.yml");
+    std::cout << sylar::LoggerMgr::GetInstance()->toYamlString() << std::endl;
+    YAML::Node root = YAML::LoadFile("./bin/conf/log.yml");
     sylar::Config::LoadFromYaml(root);
     std::cout << "--------------" << std::endl;
-    std::cout << sylar::LoggerManager::GetInstance()->toYamlString() << std::endl;
+    std::cout << sylar::LoggerMgr::GetInstance()->toYamlString() << std::endl;
 
-    SYLAR_LOG_INFO(system_log) << "hello system" << sed:endl;
+    SYLAR_LOG_INFO(system_log) << "hello system" << std::endl;
 }
 
 int main(int argc, char ** argv) {
