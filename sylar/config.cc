@@ -3,11 +3,13 @@
 namespace sylar {
 
 //static 成员变量必须在类外初始化一次
-Config::ConfigVarMap Config::s_datas;
+//见头文件的注释
+// Config::ConfigVarMap Config::s_datas;
 
 //查找当前有无这个配置项，有的话返回它，这个方法特殊在，不需要T，直接Base指针
 ConfigVarBase::ptr Config::LookupBase(const std::string& name)
 {
+    auto s_datas = GetDatas();
     auto it = s_datas.find(name);
     return it == s_datas.end() ? nullptr : it->second;
 }

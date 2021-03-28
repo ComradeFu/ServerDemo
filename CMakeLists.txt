@@ -24,6 +24,9 @@ add_library(sylar SHARED ${LIB_SRC})
 #add_library(sylar_static STATIC ${LIB_SRC})
 #SET_TARGET_PROPERTIES (sylar_static PROPERTIES OUTPUT_NAME "sylar")
 
+# 在一些其他的编译平台（比如macos），可能会在编译 config.cc.o 链接文件的时候，就需要先告知依赖 yaml-cpp了
+add_dependencies(sylar yaml-cpp)
+
 add_executable(test tests/test.cc)
 add_dependencies(test sylar)
 #这个为什么也要加 ${YAMLCPP}？不知道，不然会报错，额

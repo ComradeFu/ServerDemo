@@ -42,9 +42,12 @@
 
 //定义一个宏吧，这样方便一点
 #define SYLAR_LOG_ROOT() sylar::LoggerMgr::GetInstance()->getRoot()
+#define SYLAR_LOG_NAME(name) sylar::LoggerMgr::GetInstance()->getLogger(name)
+
 namespace sylar {
 
 class Logger;
+class LoggerManager;
 
 //日志等级
 class LogLevel {
@@ -59,6 +62,7 @@ public:
 	};
 
 	static const char* ToString(LogLevel::Level level);
+	static LogLevel::Level FromString(const std::string& str);
 };
 
 //日志的本体
@@ -125,6 +129,10 @@ public:
 	//初始化
 	void init();
 
+	bool isError() const {return m_error;}
+
+	const std::string getPattern() const { return m_pattern; }
+
 	//%t	%thread_id %m %,
 	std::string format(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event);
 public:
@@ -144,6 +152,7 @@ private:
 	//根据模式来解析
 	std::string m_pattern;
 	std::vector<FormatItem::ptr> m_items;
+	bool m_error = false; //用来判断这个formatter 是否有格式解析错误了
 };
 
 //还有一个“轮转式”的，就是按天分割日志。。再说吧。。
@@ -158,6 +167,8 @@ public:
 
 	// log 方法是很多的，比如 std 跟 file，子类必须实现这个方法
 	virtual void log(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) = 0;
+
+	virtual std::string toYamlString() = 0;
 
 	void setFormatter(LogFormatter::ptr val) {m_formatter = val;}
 	LogFormatter::ptr getFormatter() const {return m_formatter;}
@@ -180,6 +191,8 @@ public:
 	typedef std::shared_ptr<StdoutLogAppender> ptr;
 	//不用 virtual 用 oveerride 是为了更强调这个方法是从基类继承出来的重载的实现，炫技
 	void log(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) override;
+
+	std::string toYamlString() override;
 };
 
 //输出到文件的appender
@@ -192,6 +205,7 @@ public:
 	//重新打开一次文件，文件打开成功返回 true
 	bool reopen();
 
+	std::string toYamlString() override;
 private:
 	std::string m_filename; //额外需要一个文件名
 	std::ofstream m_filestream; //文件流
@@ -199,6 +213,7 @@ private:
 
 //日志输出器，继承这个是为了能快速提取出自己的 shared_ptr
 class Logger : public std::enable_shared_from_this<Logger> {
+	friend class LoggerManager;
 public:
 	Logger(const std::string& name = "root");
 
@@ -215,16 +230,25 @@ public:
 
 	void addAppender(LogAppender::ptr appender);
 	void delAppender(LogAppender::ptr appender);
+	void clearAppenders();
 
 	LogLevel::Level getLevel() const {return m_level;}
 	void setLevel(LogLevel::Level val) {m_level = val;}
 
 	const std::string& getName() const {return m_name;}
+	void setFormatter(LogFormatter::ptr val);
+	void setFormatter(const std::string& val);
+	LogFormatter::ptr getFormatter();
+
+	std::string toYamlString();
 private:
 	std::string m_name;
 	LogLevel::Level m_level; //本日志器的级别
 	std::list<LogAppender::ptr> m_appenders; //输出到哪里的一个集合
 	LogFormatter::ptr m_formatter; //有些logger appender 不需要自己的formater是直接输出
+
+	//一个比较奇怪的优化，如果自己没有 appender，就写到root去，所以需要知道 root
+	Logger::ptr m_root;
 };
 
 class LoggerManager {
@@ -235,6 +259,8 @@ public:
 	//快速初始化应该初始化的logger
 	void init();
 	Logger::ptr getRoot() const { return m_root; }
+
+	std::string toYamlString();
 private:
 	std::map<std::string, Logger::ptr> m_loggers;
 	Logger::ptr m_root; //默认的logger
