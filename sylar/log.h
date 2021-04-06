@@ -158,6 +158,7 @@ private:
 //还有一个“轮转式”的，就是按天分割日志。。再说吧。。
 //日志输出地
 class LogAppender {
+friend class Logger;
 public:
 	typedef std::shared_ptr<LogAppender> ptr;
 
@@ -170,7 +171,7 @@ public:
 
 	virtual std::string toYamlString() = 0;
 
-	void setFormatter(LogFormatter::ptr val) {m_formatter = val;}
+	void setFormatter(LogFormatter::ptr val);
 	LogFormatter::ptr getFormatter() const {return m_formatter;}
 
 	LogLevel::Level getLevel() const { return m_level;}
@@ -180,6 +181,7 @@ public:
 protected:
 	//定义是针对哪些级别的
 	LogLevel::Level m_level = LogLevel::DEBUG;
+	bool m_hasFormatter = false;
 	//需要怎么输出、输出什么
 	LogFormatter::ptr m_formatter;
 };

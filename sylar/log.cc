@@ -285,6 +285,15 @@ namespace sylar {
     void Logger::setFormatter(LogFormatter::ptr val)
     {
         m_formatter = val;
+
+        //使用了默认的formatter appender的话，也要进行对应的修改
+        for(auto& i : m_appenders)
+        {
+            if(!i->m_hasFormatter)
+            {
+                i->m_formatter = m_formatter
+            }
+        }
     }
 
     void Logger::setFormatter(const std::string& val)
@@ -300,7 +309,8 @@ namespace sylar {
             return;
         }
 
-        m_formatter = new_val;
+        // m_formatter = new_val;
+        setFormatter(new_val);
     }
 
     std::string Logger::toYamlString()
@@ -337,7 +347,9 @@ namespace sylar {
         //Logger 自带自定义的 formatter
         if(!appender->getFormatter())
         {
-            appender->setFormatter(m_formatter);
+            appender->m_formatter = m_formatter
+            // 这种情况，不改变 m_hasFormatter ，表示是默认的 formatter，怪怪的。
+            // appender->setFormatter(m_formatter);
         }
 
         //现在先不考虑线程安全。后面再补上
@@ -414,6 +426,19 @@ namespace sylar {
     }
 
 //LogAppender
+    void LogAppender::LogsetFormatter(LogFormatter::ptr val) 
+    {
+        m_formatter = val;
+        if(val)
+        {
+            m_hasFormatter = true;
+        }
+        else
+        {
+            m_hasFormatter = false;
+        }
+    }
+
     void StdoutLogAppender::log(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event)
     {
         if(level < m_level)
@@ -430,7 +455,7 @@ namespace sylar {
         if(m_level != LogLevel::UNKNOW)
             node["level"] = LogLevel::ToString(m_level);
 
-        if(m_formatter)
+        if(m_hasFormatter && m_formatter)
         {
             node["formatter"] = m_formatter->getPattern();
         }
@@ -476,7 +501,7 @@ namespace sylar {
         if(m_level != LogLevel::UNKNOW)
             node["level"] = LogLevel::ToString(m_level);
 
-        if(m_formatter)
+        if(m_hasFormatter && m_formatter)
         {
             node["formatter"] = m_formatter->getPattern();
         }
@@ -649,7 +674,7 @@ namespace sylar {
                 }
             }
 
-            std::cout << "(" << std::get<0>(i) << ") - (" << std::get<1>(i) << ") - (" << std::get<2>(i) << ") " << std::endl;
+            // std::cout << "(" << std::get<0>(i) << ") - (" << std::get<1>(i) << ") - (" << std::get<2>(i) << ") " << std::endl;
         }
     }
 
@@ -923,6 +948,18 @@ namespace sylar {
                         }
 
                         ap->setLevel(a.level);
+                        if(a.formatter.empty())
+                        {
+                            LogFormatter::ptr fmt(new LogFormatter(a.formatter));
+                            if(fmt->isError())
+                            {
+                                ap->setFormatter(fmt);
+                            }
+                            else
+                            {
+                                std::cout << "log.name=" << i.name << "appender type=" << a.type << "formatter=" << a.formatter << " is invalid" << std::endl;
+                            }
+                        }
                         logger->addAppender(ap);
                     }
                 }
