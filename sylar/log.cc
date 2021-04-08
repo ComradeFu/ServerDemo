@@ -279,7 +279,7 @@ namespace sylar {
     Logger::Logger(const std::string& name):m_name(name), m_level(LogLevel::DEBUG)
     {
         // m_formatter.reset(new LogFormatter("%d%T%t%T[%p]%T[%c]%T<%f:%l>%T%m%n"));
-        m_formatter.reset(new LogFormatter("%d{%Y-%m-%d %H:%M:%S}%T%t%T%F%T[%p]%T[%c]%T<%f:%l>%T%m%n"));
+        m_formatter.reset(new LogFormatter("%d{%Y-%m-%d %H:%M:%S}%T%t%T%F%T[%p]%T[%c][%T]<%f:%l>%T%m%n"));
     }
 
     void Logger::setFormatter(LogFormatter::ptr val)
@@ -291,7 +291,7 @@ namespace sylar {
         {
             if(!i->m_hasFormatter)
             {
-                i->m_formatter = m_formatter
+                i->m_formatter = m_formatter;
             }
         }
     }
@@ -347,7 +347,7 @@ namespace sylar {
         //Logger 自带自定义的 formatter
         if(!appender->getFormatter())
         {
-            appender->m_formatter = m_formatter
+            appender->m_formatter = m_formatter;
             // 这种情况，不改变 m_hasFormatter ，表示是默认的 formatter，怪怪的。
             // appender->setFormatter(m_formatter);
         }
@@ -426,7 +426,7 @@ namespace sylar {
     }
 
 //LogAppender
-    void LogAppender::LogsetFormatter(LogFormatter::ptr val) 
+    void LogAppender::setFormatter(LogFormatter::ptr val) 
     {
         m_formatter = val;
         if(val)
@@ -524,7 +524,7 @@ namespace sylar {
         {
             i->format(ss, logger, level, event);
         }
-
+        
         return ss.str();
     }
 
@@ -901,8 +901,6 @@ namespace sylar {
         {
             g_log_defines->addListener(0xF1E231, [](const std::set<LogDefine>& old_value,
                             const std::set<LogDefine>& new_value){
-                
-                SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "on_loger_conf_changed";
                 for(auto& i : new_value )
                 {
                     auto it = old_value.find(i);
@@ -948,7 +946,7 @@ namespace sylar {
                         }
 
                         ap->setLevel(a.level);
-                        if(a.formatter.empty())
+                        if(!a.formatter.empty())
                         {
                             LogFormatter::ptr fmt(new LogFormatter(a.formatter));
                             if(fmt->isError())
@@ -957,7 +955,7 @@ namespace sylar {
                             }
                             else
                             {
-                                std::cout << "log.name=" << i.name << "appender type=" << a.type << "formatter=" << a.formatter << " is invalid" << std::endl;
+                                std::cout << "log.name=" << i.name << " appender type=" << a.type << " formatter=" << a.formatter << " is invalid" << std::endl;
                             }
                         }
                         logger->addAppender(ap);

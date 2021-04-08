@@ -223,15 +223,13 @@ void test_class()
 void test_log()
 {
     static sylar::Logger::ptr system_log = SYLAR_LOG_NAME("system");
-    SYLAR_LOG_INFO(system_log) << "hello system" << std::endl;
+    SYLAR_LOG_INFO(system_log) << "hello system";
 
     std::cout << sylar::LoggerMgr::GetInstance()->toYamlString() << std::endl;
     YAML::Node root = YAML::LoadFile("./bin/conf/log.yml");
     sylar::Config::LoadFromYaml(root);
     std::cout << "--------------" << std::endl;
     std::cout << sylar::LoggerMgr::GetInstance()->toYamlString() << std::endl;
-
-    SYLAR_LOG_INFO(system_log) << "hello system" << std::endl;
 }
 
 int main(int argc, char ** argv) {

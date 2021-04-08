@@ -7,9 +7,9 @@ project(sylar)
 include (cmake/utils.cmake)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
-set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -O3 -g -std=c++11 -Wall -Wno-deprecated -Werror -Wno-unused-function")
+set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -rdynamic -O3 -g -std=c++11 -Wall -Wno-deprecated -Werror -Wno-unused-function")
 
-add_link_option(-rdynamic)
+# add_link_option(-rdynamic)
 
 include_directories(.)
 # 机器统一安装的就不了，自动在 /usr/local/include 里
@@ -30,9 +30,12 @@ set(LIB_SRC
 
 add_library(sylar SHARED ${LIB_SRC})
 
+# __FILE__改写，不然会警告（如果设定等级比较高，可能会直接报错）
+add_definitions(-Wno-builtin-macro-redefined)
+
 force_redefine_file_macro_for_sources(sylar)  # __FILE__ 相对路径
 
-setl(LIB_LIB
+set(LIB_LIB
     sylar
     pthread
     yaml-cpp
@@ -42,7 +45,7 @@ setl(LIB_LIB
 #SET_TARGET_PROPERTIES (sylar_static PROPERTIES OUTPUT_NAME "sylar")
 
 # 在一些其他的编译平台（比如macos），可能会在编译 config.cc.o 链接文件的时候，就需要先依赖 yaml-cpp.a 了
-target_link_libraries(sylar yaml-cpp)
+# add_dependencies(sylar yaml-cpp)
 
 add_executable(test tests/test.cc)
 add_dependencies(test sylar)
