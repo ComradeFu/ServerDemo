@@ -67,7 +67,7 @@ void* Thread::run(void* arg)
     //已经进入正式的线程
     t_thread = thread;
     t_thread_name = thread->m_name;
-    
+
     thread->m_id = GetThreadId();
 
     //给线程命名（top）也会看到，最大16字符数
@@ -88,6 +88,7 @@ void* Thread::run(void* arg)
     return 0; //注意这里，void*
 }
 
+// 关于 detach 模式跟 join 模式 https://blog.csdn.net/wushuomin/article/details/80051295
 void Thread::join()
 {
     if(m_thread)
