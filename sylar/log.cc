@@ -284,6 +284,7 @@ namespace sylar {
 
     void Logger::setFormatter(LogFormatter::ptr val)
     {
+        MutexType::Lock lock(m_mutex);
         m_formatter = val;
 
         //使用了默认的formatter appender的话，也要进行对应的修改
@@ -291,6 +292,8 @@ namespace sylar {
         {
             if(!i->m_hasFormatter)
             {
+                //这里没有调用 appender 的接口，是直接在友元操作了，所以也必须上把锁
+                MutexType::Lock il(i->m_mutex);
                 i->m_formatter = m_formatter;
             }
         }
@@ -315,6 +318,8 @@ namespace sylar {
 
     std::string Logger::toYamlString()
     {
+        //锁的粒度可以小一点，但也不差这一点了。。就这样吧。。
+        MutexType::Lock lock(m_mutex);
         YAML::Node node;
         node["name"] = m_name;
 
@@ -339,14 +344,18 @@ namespace sylar {
 
     LogFormatter::ptr Logger::getFormatter()
     {
+        // shared_ptr 并不线程安全，so
+        MutexType::Lock lock(m_mutex);
         return m_formatter;
     }
 
     void Logger::addAppender(LogAppender::ptr appender)
     {
+        MutexType::Lock lock(m_mutex);
         //Logger 自带自定义的 formatter
         if(!appender->getFormatter())
         {
+            MutexType::Lock appender_lock(appender->m_mutex);
             appender->m_formatter = m_formatter;
             // 这种情况，不改变 m_hasFormatter ，表示是默认的 formatter，怪怪的。
             // appender->setFormatter(m_formatter);
@@ -358,6 +367,7 @@ namespace sylar {
 
     void Logger::delAppender(LogAppender::ptr appender)
     {
+        MutexType::Lock lock(m_mutex);
         //遍历删除
         for(auto it = m_appenders.begin();
                 it != m_appenders.end(); ++it)
@@ -372,6 +382,8 @@ namespace sylar {
 
     void Logger::clearAppenders()
     {
+        //clear 是一个复杂操作，所以要加
+        MutexType::Lock lock(m_mutex);
         m_appenders.clear();
     }
 
@@ -381,6 +393,9 @@ namespace sylar {
         if(level < m_level)
             return;
         
+        //有人是可能修改 appenders 的，so
+        MutexType::Lock lock(m_mutex);
+
         //自己的智能指针
         auto self = shared_from_this();
 
@@ -428,6 +443,8 @@ namespace sylar {
 //LogAppender
     void LogAppender::setFormatter(LogFormatter::ptr val) 
     {
+        // get set 锁，锁到函数结束吧，因为 shared_ptr 不是线程安全的。另外 m_hasFormatter 的设置也不安全
+        MutexType::Lock lock(m_mutex);
         m_formatter = val;
         if(val)
         {
@@ -439,16 +456,25 @@ namespace sylar {
         }
     }
 
+    //于是下面就不能用 const 方法了，因为会改动 m_mutex
+    LogFormatter::ptr LogAppender::getFormatter()
+    {
+        MutexType::Lock lock(m_mutex);
+        return m_formatter;
+    }
+
     void StdoutLogAppender::log(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event)
     {
         if(level < m_level)
             return;
-        
+
+        MutexType::Lock lock(m_mutex);
         std::cout << m_formatter->format(logger, level, event);
     }
 
     std::string StdoutLogAppender::toYamlString()
     {
+        MutexType::Lock lock(m_mutex);
         YAML::Node node;
         node["type"] = "StdoutLogAppender";
 
@@ -473,6 +499,7 @@ namespace sylar {
 
     bool FileLogAppender::reopen()
     {
+        MutexType::Lock lock(m_mutex);
         if(m_filestream)
         {
             m_filestream.close();
@@ -489,11 +516,22 @@ namespace sylar {
         if(level < m_level)
             return;
         
+        //为了防止意外删除出错，牺牲一点点不太影响的性能
+        //每秒钟都重新打开一次（被强删掉之后，可能会有瞬间的log丢失）
+        uint64_t now = time(0);
+        if(now != m_lastTime)
+        {
+            reopen();
+            m_lastTime = now;
+        }
+
+        MutexType::Lock lock(m_mutex);
         m_filestream << m_formatter->format(logger, level, event);
     }
 
     std::string FileLogAppender::toYamlString()
     {
+        MutexType::Lock lock(m_mutex);
         YAML::Node node;
         node["type"] = "FileLogAppender";
         node["file"] = m_filename;
@@ -687,6 +725,7 @@ namespace sylar {
     }
 
     Logger::ptr LoggerManager::getLogger(const std::string& name) {
+        MutexType::Lock lock(m_mutex);
         auto it = m_loggers.find(name);
         if(it != m_loggers.end())
         {
@@ -705,6 +744,7 @@ namespace sylar {
 
     std::string LoggerManager::toYamlString()
     {
+        MutexType::Lock lock(m_mutex);
         YAML::Node node;
         for(auto& i : m_loggers)
         {

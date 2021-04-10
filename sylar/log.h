@@ -11,6 +11,7 @@
 #include <map>
 #include "util.h"
 #include "singleton.h"
+#include "thread.h"
 
 //定义几个让日志好用的宏。一般就是用这种方式来简写。就不用定义 Event 了。当然用函数也可以
 // stringsteam a = SYLAR_LOG_DEBUG(logger); a << "test logger debug.";wrap类被回收的时候会自动把ss写进logger
@@ -120,7 +121,8 @@ private:
 	LogEvent::ptr m_event;
 };
 
-//日志格式(Appender 输出)
+//日志格式(Appender 输出)，
+//LogFormatter 没提供修改它自身的方法，一旦新建出来就不会变了，只能使用。所以就不需要考虑线程安全之类的了
 class LogFormatter {
 public:
 	typedef std::shared_ptr<LogFormatter> ptr;
@@ -161,7 +163,7 @@ class LogAppender {
 friend class Logger;
 public:
 	typedef std::shared_ptr<LogAppender> ptr;
-
+	typedef Mutex MutexType;
 	// 可以预见日志消费是多种的，所以必须将析构函数变成虚函数。
 	// 否则继承会出现析构上的问题
 	virtual ~LogAppender(){};
@@ -169,10 +171,11 @@ public:
 	// log 方法是很多的，比如 std 跟 file，子类必须实现这个方法
 	virtual void log(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) = 0;
 
+	// toYamlString 也必须加锁，不然中途可能会有人修改formatter，导致输出不准
 	virtual std::string toYamlString() = 0;
 
 	void setFormatter(LogFormatter::ptr val);
-	LogFormatter::ptr getFormatter() const {return m_formatter;}
+	LogFormatter::ptr getFormatter();
 
 	LogLevel::Level getLevel() const { return m_level;}
     void setLevel(LogLevel::Level val) { m_level = val;}
@@ -182,6 +185,8 @@ protected:
 	//定义是针对哪些级别的
 	LogLevel::Level m_level = LogLevel::DEBUG;
 	bool m_hasFormatter = false;
+	//写锁就行，往xxx里面写是比较多的
+	MutexType m_mutex;
 	//需要怎么输出、输出什么
 	LogFormatter::ptr m_formatter;
 };
@@ -211,6 +216,7 @@ public:
 private:
 	std::string m_filename; //额外需要一个文件名
 	std::ofstream m_filestream; //文件流
+	uint64_t m_lastTime = 0;
 };
 
 //日志输出器，继承这个是为了能快速提取出自己的 shared_ptr
@@ -221,6 +227,7 @@ public:
 
 	//智能指针定义
 	typedef std::shared_ptr<Logger> ptr;	
+	typedef Mutex MutexType;
 
 	void log(LogLevel::Level level, LogEvent::ptr event);
 	
@@ -246,6 +253,7 @@ public:
 private:
 	std::string m_name;
 	LogLevel::Level m_level; //本日志器的级别
+	MutexType m_mutex;
 	std::list<LogAppender::ptr> m_appenders; //输出到哪里的一个集合
 	LogFormatter::ptr m_formatter; //有些logger appender 不需要自己的formater是直接输出
 
@@ -255,6 +263,8 @@ private:
 
 class LoggerManager {
 public:
+	typedef Mutex MutexType;
+
 	LoggerManager();
 	Logger::ptr getLogger(const std::string& name);
 
@@ -264,6 +274,7 @@ public:
 
 	std::string toYamlString();
 private:
+	MutexType m_mutex;
 	std::map<std::string, Logger::ptr> m_loggers;
 	Logger::ptr m_root; //默认的logger
 };

@@ -12,6 +12,37 @@ static thread_local std::string t_thread_name = "UNKNOW";
 
 static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
 
+Semaphore::Semaphore(uint32_t count)
+{
+    if(sem_init(&m_semaphore, 0, count))
+    {
+        //以后要增加错误处理
+        throw std::logic_error("sem_init error");
+    }
+}
+
+~Semaphore::Semaphore()
+{
+    sem_destroy(&m_semaphore);
+}
+
+void Semaphore::wait()
+{
+    //等到会返回0
+    if(!sem_wait(&m_semaphore))
+    {
+        throw std::logic_error("sem_wait error");
+    }
+}
+
+void Semaphore::notify()
+{
+    if(!sem_post(&m_semaphore))
+    {
+        throw std::logic_error("sem_post error");
+    }
+}
+
 Thread* Thread::GetThis()
 {
     return t_thread;
@@ -50,6 +81,11 @@ Thread::Thread(std::function<void()>cb, const std::string& name):m_cb(cb), m_nam
             << " name=" << name;
         throw std::logic_error("pthread_create error");
     }
+
+    //也是测试也是功能，线程类并不知道自己的构造函数是否出去了，run才执行
+    //这里用自己的信号量，让自己有确定的顺序。等所有的东西初始化好了（run 里面一堆的赋值），我再算构造完成。
+    //换句话说，我初始化成功之后，run肯定是进去了的，跑起来了
+    m_semaphore.wait();
 }
 
 Thread::~Thread()
@@ -82,6 +118,9 @@ void* Thread::run(void* arg)
     //所以就用 swap 来进行一次，把 m_cb 换成空的 function 对象
     //阿土同时还提到了一个解决方法，那就是用 bind 来解决这个？待研究
     cb.swap(thread->m_cb);
+
+    //初始化完成
+    thread->m_semaphore.notify();
 
     cb();
 
