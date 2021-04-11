@@ -279,7 +279,7 @@ namespace sylar {
     Logger::Logger(const std::string& name):m_name(name), m_level(LogLevel::DEBUG)
     {
         // m_formatter.reset(new LogFormatter("%d%T%t%T[%p]%T[%c]%T<%f:%l>%T%m%n"));
-        m_formatter.reset(new LogFormatter("%d{%Y-%m-%d %H:%M:%S}%T%t%T%F%T[%p]%T[%c][%T]<%f:%l>%T%m%n"));
+        m_formatter.reset(new LogFormatter("%d{%Y-%m-%d %H:%M:%S}%T%t%T%F%T[%p]%T[%c]%T<%f:%l>%T%m%n"));
     }
 
     void Logger::setFormatter(LogFormatter::ptr val)
@@ -505,7 +505,7 @@ namespace sylar {
             m_filestream.close();
         }
 
-        m_filestream.open(m_filename);
+        m_filestream.open(m_filename, std::ios::app);
 
         //两个感叹号是为了转成 boolean
         return !!m_filestream;
@@ -518,6 +518,8 @@ namespace sylar {
         
         //为了防止意外删除出错，牺牲一点点不太影响的性能
         //每秒钟都重新打开一次（被强删掉之后，可能会有瞬间的log丢失）
+        //在外部删除文件的时候，fd 还是在内存里生效的，并且磁盘也不会释放（只是从系统里“标识删除掉”了）
+        //这样reopen既可以及时释放失效的fd，也可以继续产生日志
         uint64_t now = time(0);
         if(now != m_lastTime)
         {
@@ -939,7 +941,7 @@ namespace sylar {
     {
         LogIniter()
         {
-            g_log_defines->addListener(0xF1E231, [](const std::set<LogDefine>& old_value,
+            g_log_defines->addListener([](const std::set<LogDefine>& old_value,
                             const std::set<LogDefine>& new_value){
                 for(auto& i : new_value )
                 {

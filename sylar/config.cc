@@ -9,6 +9,8 @@ namespace sylar {
 //查找当前有无这个配置项，有的话返回它，这个方法特殊在，不需要T，直接Base指针
 ConfigVarBase::ptr Config::LookupBase(const std::string& name)
 {
+    RWMutexType::ReadLock lock(GetMutex());
+
     auto& s_datas = GetDatas();
     auto it = s_datas.find(name);
     return it == s_datas.end() ? nullptr : it->second;
@@ -41,6 +43,7 @@ static void ListAllMember(const std::string& prefix,
         
 }
 
+//不用加锁，因为已经在 fromstring 做好。不会出现内存的问题了（但是可能出现两个配置交错的问题，这个就交给上层决定了）
 void Config::LoadFromYaml(const YAML::Node& root) {
     //配合打平了
     std::list<std::pair<std::string, const YAML::Node>> all_nodes;
@@ -74,6 +77,18 @@ void Config::LoadFromYaml(const YAML::Node& root) {
                 var->fromString(ss.str());
             }
         }
+    }
+}
+
+//调试、暴露内部访问的接口
+void Config::Visit(std::function<void(ConfigVarBase::ptr)> cb)
+{
+    RWMutexType::ReadLock lock(GetMutex());
+
+    ConfigVarMap& m = GetDatas();
+    for(auto it = m.begin(); it != m.end(); ++it)
+    {
+        cb(it->second);
     }
 }
 

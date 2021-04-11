@@ -13,6 +13,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <stdint.h>
+#include <atomic>
 
 namespace sylar
 {
@@ -38,7 +39,7 @@ private:
 private:
 
     sem_t m_semaphore;
-}
+};
 
 //互斥量，LockGuard。一般用在局部（所以栈上的超出作用域会自动销毁）
 //也就是“锁”。为什么是一个结构体，是因为我们常用的锁的情境下，一般都会有锁的互相对应，有加锁就会有解锁
@@ -49,8 +50,8 @@ template<class T>
 struct ScopedLockImpl
 {
 public:
-    ScopedLockImpl(T& mutext)
-        :m_mutext(mutex)
+    ScopedLockImpl(T& mutex)
+        :m_mutex(mutex)
     {
         m_mutex.lock();
         m_locked = true;
@@ -89,8 +90,8 @@ template<class T>
 struct ReadScopedLockImpl
 {
 public:
-    ReadScopedLockImpl(T& mutext)
-        :m_mutext(mutex)
+    ReadScopedLockImpl(T& mutex)
+        :m_mutex(mutex)
     {
         m_mutex.rdlock();
         m_locked = true;
@@ -128,8 +129,8 @@ template<class T>
 struct WriteScopedLockImpl
 {
 public:
-    WriteScopedLockImpl(T& mutext)
-        :m_mutext(mutex)
+    WriteScopedLockImpl(T& mutex)
+        :m_mutex(mutex)
     {
         m_mutex.wrlock();
         m_locked = true;
@@ -190,7 +191,7 @@ public:
     }
 
 private:
-    pthread_mutext_t m_mutex;
+    pthread_mutex_t m_mutex;
 };
 
 //空的锁，什么都不干。用来测试（就不用在加好锁的地方注释来测试了）
@@ -202,7 +203,7 @@ public:
     ~NullMutex(){}
     void lock(){}
     void unlock(){}
-}
+};
 
 //读写锁
 class RWMutex {
@@ -290,6 +291,9 @@ private:
 //不同的是 spin lock 还是会有一个尝试几次之后依然会锁（保险起见）
 //我们自己实现可以 while true 一直等待
 //最后测试发现确实两边性能也差不了太多。。淦。。那还是用 spin lock 吧
+//再后来实测一个线程无锁（NullMutex）去写，也就是 20m 1s 左右的速度了
+//结合日志系统的实际来考虑，确实也是这样，日志系统就是 1 by 1 去写的，不可能同时进行（否则串台）
+//也就是 spinlock 已经相当好了
 class CASLock
 {
 public:

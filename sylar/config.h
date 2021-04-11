@@ -15,6 +15,9 @@
 #include <unordered_set>
 #include <functional> //C++11 新增加支持
 
+#include "thread.h"
+#include "log.h"
+
 namespace sylar
 {
 
@@ -347,6 +350,8 @@ namespace sylar
     class ConfigVar : public ConfigVarBase
     {
     public:
+        //配置是典型的写少读多
+        typedef RWMutex RWMutexType;
         typedef std::shared_ptr<ConfigVar> ptr;
         //使用类似智能指针，变化回调
         typedef std::function<void(const T &old_value, const T &new_value)> on_change_cb;
@@ -361,6 +366,8 @@ namespace sylar
         {
             try
             {
+                RWMutexType::ReadLock lock(m_mutex);
+
                 // return boost::lexical_cast<std::string>(m_val);
                 return ToStr()(m_val); //ToStr(m_val)
             }
@@ -378,6 +385,7 @@ namespace sylar
             try
             {
                 // m_val = boost::lexical_cast<T>(val);
+                // set value 已经加锁
                 setValue(FromStr()(val));
             }
             catch (std::exception &e)
@@ -390,46 +398,67 @@ namespace sylar
             return false;
         }
 
-        const T getValue() const { return m_val; }
+        //once use lock, no more const
+        const T getValue() 
+        { 
+            RWMutexType::ReadLock lock(m_mutex);
+            return m_val; 
+        }
+
         void setValue(const T &v)
         {
-            if (v == m_val)
             {
-                return;
-            }
+                RWMutexType::ReadLock lock(m_mutex);
+                if (v == m_val)
+                {
+                    return;
+                }
 
-            for (auto &i : m_cbs)
-            {
-                i.second(m_val, v);
+                for (auto &i : m_cbs)
+                {
+                    i.second(m_val, v);
+                }
             }
-
+            
+            RWMutexType::WriteLock lock(m_mutex);
             m_val = v;
         }
 
         std::string getTypeName() const override { return typeid(T).name(); }
 
-        void addListener(uint64_t key, on_change_cb cb)
+        uint64_t addListener(on_change_cb cb)
         {
-            m_cbs[key] = cb;
+            static uint64_t s_fun_id = 0;
+            RWMutexType::WriteLock lock(m_mutex);
+
+            ++s_fun_id;
+
+            m_cbs[s_fun_id] = cb;
+
+            return s_fun_id;
         }
 
         void delListener(uint64_t key)
         {
+            RWMutexType::WriteLock lock(m_mutex);
             m_cbs.erase(key);
         }
 
         on_change_cb getListener(uint64_t key)
         {
+            RWMutexType::ReadLock lock(m_mutex);
             auto it = m_cbs.find(key);
             return it == m_cbs.end() ? nullptr : it->second;
         }
 
         void clearListener()
         {
+            RWMutexType::WriteLock lock(m_mutex);
             m_cbs.clear();
         }
 
     private:
+        RWMutexType m_mutex;
         T m_val;
 
         //变更回调函数组；为什么用map，是functional没有比较函数，因此它放在容器里面是没有办法被找出来的
@@ -444,6 +473,9 @@ namespace sylar
         // typedef std::map<std::string, ConfigVarBase::ptr> ConfigVarMap;
         //写到了 unordered_map ，干脆就换了算了。。
         typedef std::unordered_map<std::string, ConfigVarBase::ptr> ConfigVarMap;
+        //也是读多写少的情况
+        typedef RWMutex RWMutexType;
+
         //两种用法
 
         //没有定义的时候就初始化
@@ -458,6 +490,9 @@ namespace sylar
         static typename ConfigVar<T>::ptr Lookup(const std::string &name,
                                                  const T &default_value, const std::string &description = "")
         {
+            //粗暴一点加个写锁吧
+            RWMutexType::WriteLock lock(GetMutex());
+
             //tmp 是空的的话，两种情况。一种是真的是空，另一种是类型不一样。
             // auto tmp = Lookup<T>(name);
             // if(tmp) {
@@ -501,6 +536,8 @@ namespace sylar
         template <class T>
         static typename ConfigVar<T>::ptr Lookup(const std::string &name)
         {
+            RWMutexType::ReadLock lock(GetMutex());
+
             auto& s_datas = GetDatas();
             auto it = s_datas.find(name);
             if (it == s_datas.end())
@@ -514,6 +551,8 @@ namespace sylar
         //不需要T的Base方法
         static ConfigVarBase::ptr LookupBase(const std::string &name);
 
+        //调试方法，查看某个配置
+        static void Visit(std::function<void(ConfigVarBase::ptr)> cb);
     private:
         //singleton, so use s_ for prefix
         // static ConfigVarMap s_datas;
@@ -526,6 +565,13 @@ namespace sylar
         {
             static ConfigVarMap s_datas;
             return s_datas;
+        }
+
+        //这么做的理由同上。全局静态变量的初始化，是没有严格的顺序的
+        static RWMutexType& GetMutex()
+        {
+            static RWMutexType s_mutex;
+            return s_mutex;
         }
     };
 

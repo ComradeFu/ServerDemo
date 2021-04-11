@@ -21,7 +21,7 @@ void func1() {
     for(int i = 0; i < 100000; ++i)
     {
         // sylar::RWMutext::WriteLock lock(s_mutex);
-        sylar::Mutext::Lock lock(s_mutex);
+        sylar::Mutex::Lock lock(s_mutex);
         ++count;
     }
 }

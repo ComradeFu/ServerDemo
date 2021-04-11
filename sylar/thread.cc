@@ -21,7 +21,7 @@ Semaphore::Semaphore(uint32_t count)
     }
 }
 
-~Semaphore::Semaphore()
+Semaphore::~Semaphore()
 {
     sem_destroy(&m_semaphore);
 }
@@ -29,7 +29,7 @@ Semaphore::Semaphore(uint32_t count)
 void Semaphore::wait()
 {
     //等到会返回0
-    if(!sem_wait(&m_semaphore))
+    if(sem_wait(&m_semaphore))
     {
         throw std::logic_error("sem_wait error");
     }
@@ -37,7 +37,7 @@ void Semaphore::wait()
 
 void Semaphore::notify()
 {
-    if(!sem_post(&m_semaphore))
+    if(sem_post(&m_semaphore))
     {
         throw std::logic_error("sem_post error");
     }
