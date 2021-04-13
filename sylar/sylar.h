@@ -7,10 +7,12 @@
 //说白了就是粒度划分的问题
 //但头文件不经常改的话，还是很爽的
 
-#include "sylar/config.h"
-#include "sylar/log.h"
-#include "sylar/singleton.h"
-#include "sylar/thread.h"
-#include "sylar/util.h"
+#include "macro.h"
+#include "config.h"
+#include "log.h"
+#include "singleton.h"
+#include "thread.h"
+#include "util.h"
+#include "fiber.h"
 
 #endif

@@ -10,7 +10,9 @@ static thread_local Thread* t_thread = nullptr;
 //另外确实有些线程并不能作为我们的线程类，比如主线程。并不是我们生成的
 static thread_local std::string t_thread_name = "UNKNOW"; 
 
-static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
+//以后我们会在每个文件的开头，都搞一个这个
+//注意并不会引起定义冲突，因为不在.h，只在 .cpp
+sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
 
 Semaphore::Semaphore(uint32_t count)
 {
