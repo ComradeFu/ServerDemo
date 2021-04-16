@@ -6,7 +6,7 @@
 
 namespace sylar {
 
-sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
+static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
 
 pid_t GetThreadId() 
 {
@@ -15,7 +15,7 @@ pid_t GetThreadId()
 
 uint64_t GetFiberId() 
 {
-    return sylar::Fiber::GetId();
+    return sylar::Fiber::GetFiberId();
 }
 
 void Backtrace(std::vector<std::string>& bt, int size, int skip)

@@ -79,7 +79,7 @@ public:
 	int32_t getLine() const { return m_line; }
 	uint32_t getElapse() const { return m_elapse; }
 	uint32_t getThreadId() const { return m_threadId; }
-	const std::string getThreadNmae() const { return m_threadName; }
+	const std::string getThreadName() const { return m_threadName; }
 	uint32_t getFiberId() const { return m_fiberId; }
 	uint32_t getTime() const { return m_time; }
 	std::string getContent() const { return m_ss.str(); }

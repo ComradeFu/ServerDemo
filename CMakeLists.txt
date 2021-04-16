@@ -23,10 +23,10 @@ link_directories(/usr/local/lib64/)
 
 set(LIB_SRC 
     sylar/log.cc
+    sylar/fiber.cc
     sylar/util.cc
     sylar/config.cc
     sylar/thread.cc
-    sylar/fiber.cc
     )
 
 add_library(sylar SHARED ${LIB_SRC})
