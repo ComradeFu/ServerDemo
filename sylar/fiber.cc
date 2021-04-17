@@ -58,10 +58,10 @@ Fiber::Fiber()
     //这个函数执行，肯定是 main
     SetThis(this);
 
-    if(getcontext(&m_ctx))
-    {
-        SYLAR_ASSERT2(false, "getcontext");
-    }
+    // if(getcontext(&m_ctx))
+    // {
+    //     SYLAR_ASSERT2(false, "getcontext");
+    // }
 
     ++s_fiber_count;
 
