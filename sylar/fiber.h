@@ -14,10 +14,12 @@
 
 namespace sylar
 {
+class Scheduler;
 //继承它，是为了拿出 this 的智能指针
 //继承之后，这个 class 就不能在栈里创建了。因为需要用到智能指针的内啥
 class Fiber : public std::enable_shared_from_this<Fiber>
 {
+friend class Scheduler;
 public:
     typedef std::shared_ptr<Fiber> ptr;
 
@@ -36,7 +38,7 @@ private:
     Fiber();
 
 public:
-    Fiber(std::function<void()> cb, size_t stacksize = 0);
+    Fiber(std::function<void()> cb, size_t stacksize = 0, bool use_caller = false);
     ~Fiber();
 
     //比如，已经执行完了，就可以重新定义函数复用进去,INIT, TERM 两种状态可以合法调用
@@ -50,7 +52,12 @@ public:
     void swapIn(); //进去执行了
     void swapOut(); //我不执行了，让出来，自己到后台去
 
+    //比较特殊的存在。。
+    void call();
+    void back();
+
     uint64_t getId() const { return m_id; }
+    State getState() const { return m_state; }
 
 public:
     //设置当前协程
@@ -67,6 +74,8 @@ public:
     static uint64_t TotalFibers();
 
     static void MainFunc();
+    //为了配合 scheduler 搞的，非常 ugly
+    static void CallerMainFunc();
     static uint64_t GetFiberId();
 
 private:

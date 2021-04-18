@@ -2,6 +2,7 @@
 #include "config.h"
 #include "macro.h"
 #include "log.h"
+#include "scheduler.h"
 #include <atomic>
 
 namespace sylar
@@ -12,7 +13,7 @@ static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
 static std::atomic<uint64_t> s_fiber_id {0};
 static std::atomic<uint64_t> s_fiber_count {0};
 
-//用普通指针是为了方便判断
+//用普通指针是为了方便判断，正在跑的
 static thread_local Fiber* t_fiber = nullptr;
 //线程的主协程，main fiber
 static thread_local Fiber::ptr t_threadFiber = nullptr;
@@ -69,7 +70,7 @@ Fiber::Fiber()
 }
 
 //真正的才开始开辟协程
-Fiber::Fiber(std::function<void()> cb, size_t stacksize)
+Fiber::Fiber(std::function<void()> cb, size_t stacksize, bool use_caller)
     :m_id(++s_fiber_id)
     ,m_cb(cb)
 {
@@ -88,7 +89,14 @@ Fiber::Fiber(std::function<void()> cb, size_t stacksize)
     m_ctx.uc_stack.ss_sp = m_stack;
     m_ctx.uc_stack.ss_size = m_stacksize;
 
-    makecontext(&m_ctx, &Fiber::MainFunc, 0);
+    if(!use_caller)
+    {
+        makecontext(&m_ctx, &Fiber::MainFunc, 0);
+    }
+    else
+    {
+        makecontext(&m_ctx, &Fiber::CallerMainFunc, 0);
+    }
 }
 
 Fiber::~Fiber()
@@ -146,6 +154,20 @@ void Fiber::reset(std::function<void()> cb)
     m_state = INIT;
 }
 
+//当前协程置换成目标线程协程
+//其实也可以协程跟 swapout 一样的判断分支走掉
+//但如果多了一个判断，反复切换是有判断消耗的（不是吧这个也在意？）
+void Fiber::call()
+{
+    SetThis(this);
+
+    m_state = EXEC;
+    if(swapcontext(&(*t_threadFiber).m_ctx, &m_ctx))
+    {
+        SYLAR_ASSERT2(false, "swapcontext in call");
+    }
+}
+
 void Fiber::swapIn()
 {
     SetThis(this);
@@ -154,19 +176,34 @@ void Fiber::swapIn()
     m_state = EXEC;
 
     //切换上下文，从主协程手里拿过来
-    if(swapcontext(&t_threadFiber->m_ctx, &m_ctx))
+    //注释是因为 scheduler 不能这样了，要切换回 scheduler 的主协程
+    //但这样修改就没办法单独使用 Fiber 模块了，额
+    // if(swapcontext(&t_threadFiber->m_ctx, &m_ctx))
+    if(swapcontext(&Scheduler::GetMainFiber()->m_ctx, &m_ctx))
     {
         SYLAR_ASSERT2(false, "swapcontext in swapIn");
     }
 }
 
-void Fiber::swapOut()
+void Fiber::back()
 {
     SetThis(t_threadFiber.get());
-
-    if(swapcontext(&m_ctx, &t_threadFiber->m_ctx))
+    //只能跟真正的主协程进行切换
+    if(swapcontext(&m_ctx, &t_threadFiber->m_ctx ))
     {
-        SYLAR_ASSERT2(false, "swapcontext in swapOut");
+        SYLAR_ASSERT2(false, "swapcontext in swapOut2");
+    }
+}
+
+//之前是有专门判断的，现在又改回去了
+void Fiber::swapOut()
+{
+    SetThis(Scheduler::GetMainFiber());
+
+    //这个同上面，跟调度器协程切换
+    if(swapcontext(&m_ctx, &Scheduler::GetMainFiber()->m_ctx))
+    {
+        SYLAR_ASSERT2(false, "swapcontext in swapOut1");
     }
 }
 
@@ -227,7 +264,10 @@ void Fiber::MainFunc()
     catch(const std::exception& e)
     {
         cur->m_state = EXCEPT;
-        SYLAR_LOG_ERROR(g_logger) << "Fiber Except: " << e.what();
+        SYLAR_LOG_ERROR(g_logger) << "Fiber Except: " << e.what()
+            << " fiber_id=" << cur->getId()
+            << std::endl
+            << sylar::BacktraceToString();
     }
     catch(...)
     {
@@ -245,6 +285,49 @@ void Fiber::MainFunc()
 
     //回到主协程，虽然也可以只限定 uc_link 来解决。但既然已经封装了，就不用这个了
     raw_ptr->swapOut();
+
+    //永远也不会到这里
+    SYLAR_ASSERT2(false, "never reach");
+}
+
+//如果use caller 的情况下，不用这个为入口
+//就会使得 idle 会还是被执行到最后
+void Fiber::CallerMainFunc()
+{
+    Fiber::ptr cur = GetThis();
+    SYLAR_ASSERT(cur);
+
+    try
+    {
+        cur->m_cb();
+        cur->m_cb = nullptr; //null ptr 是因为用的是 functional，可能会有智能指针在内部
+        cur->m_state = TERM;
+    }
+    catch(const std::exception& e)
+    {
+        cur->m_state = EXCEPT;
+        SYLAR_LOG_ERROR(g_logger) << "Fiber Except: " << e.what()
+            << " fiber_id=" << cur->getId()
+            << std::endl
+            << sylar::BacktraceToString();
+    }
+    catch(...)
+    {
+        //防止打印不出来
+        cur->m_state = EXCEPT;
+        SYLAR_LOG_ERROR(g_logger) << "Fiber Except";
+    }
+    
+    //解决的就是 + 1 的问题。
+    //cur 引起释放之后，它的栈也会被释放掉。继而这里的 cur 等等栈变量，会被自动销毁。
+    auto raw_ptr = cur.get();
+    cur.reset();
+
+    SYLAR_LOG_INFO(g_logger) << "Fiber main func end." << raw_ptr->getId();
+
+    //回到主协程，虽然也可以只限定 uc_link 来解决。但既然已经封装了，就不用这个了
+    //唯一的区别。。
+    raw_ptr->back();
 
     //永远也不会到这里
     SYLAR_ASSERT2(false, "never reach");

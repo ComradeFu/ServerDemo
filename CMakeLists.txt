@@ -23,6 +23,7 @@ link_directories(/usr/local/lib64/)
 
 set(LIB_SRC 
     sylar/log.cc
+    sylar/scheduler.cc
     sylar/fiber.cc
     sylar/util.cc
     sylar/config.cc
@@ -79,6 +80,11 @@ add_executable(test_fiber tests/test_fiber.cc)
 add_dependencies(test_fiber sylar)
 target_link_libraries(test_fiber ${LIB_LIB})
 force_redefine_file_macro_for_sources(test_fiber)
+
+add_executable(test_scheduler tests/test_scheduler.cc)
+add_dependencies(test_scheduler sylar)
+target_link_libraries(test_scheduler ${LIB_LIB})
+force_redefine_file_macro_for_sources(test_scheduler)
 
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
