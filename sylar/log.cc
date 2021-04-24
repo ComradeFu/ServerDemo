@@ -706,7 +706,7 @@ namespace sylar {
             XX(l, LineFormatItem),
             XX(T, TabFormatItem),
             XX(F, FiberIdFormatItem),
-            XX(N, FilenameFormatItem),
+            XX(N, ThreadNameFormatItem),
             #undef XX
         };
 

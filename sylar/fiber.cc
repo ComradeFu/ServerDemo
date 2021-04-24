@@ -105,9 +105,9 @@ Fiber::~Fiber()
     if(m_stack)
     {
         //已经分配好了栈的话，就必然是这两种状态，才能够被析构
-        SYLAR_ASSERT(m_state == TERM
+        SYLAR_ASSERT2(m_state == TERM
                 || m_state == EXCEPT
-                || m_state == INIT);
+                || m_state == INIT, m_state);
 
         StackAllocator::Dealloc(m_stack, m_stacksize);
     }
@@ -187,6 +187,8 @@ void Fiber::swapIn()
 
 void Fiber::back()
 {
+    SYLAR_LOG_INFO(g_logger) << "back !";
+
     SetThis(t_threadFiber.get());
     //只能跟真正的主协程进行切换
     if(swapcontext(&m_ctx, &t_threadFiber->m_ctx ))
@@ -291,7 +293,7 @@ void Fiber::MainFunc()
 }
 
 //如果use caller 的情况下，不用这个为入口
-//就会使得 idle 会还是被执行到最后
+//就会使得 stop 之后，不能回去继续处理caller后续的逻辑。。蛋疼。。
 void Fiber::CallerMainFunc()
 {
     Fiber::ptr cur = GetThis();
@@ -323,7 +325,7 @@ void Fiber::CallerMainFunc()
     auto raw_ptr = cur.get();
     cur.reset();
 
-    SYLAR_LOG_INFO(g_logger) << "Fiber main func end." << raw_ptr->getId();
+    SYLAR_LOG_INFO(g_logger) << "Fiber main func end root_fiber." << raw_ptr->getId();
 
     //回到主协程，虽然也可以只限定 uc_link 来解决。但既然已经封装了，就不用这个了
     //唯一的区别。。
