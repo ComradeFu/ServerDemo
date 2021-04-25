@@ -313,6 +313,7 @@ void Scheduler::run()
                     || cb_fiber->getState() == Fiber::TERM)
             {
                 // already done
+                SYLAR_LOG_DEBUG(g_logger) << "cb fiber FINISH!";
                 cb_fiber->reset(nullptr);
             }
             else

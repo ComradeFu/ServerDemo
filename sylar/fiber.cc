@@ -74,6 +74,7 @@ Fiber::Fiber(std::function<void()> cb, size_t stacksize, bool use_caller)
     :m_id(++s_fiber_id)
     ,m_cb(cb)
 {
+    SYLAR_LOG_DEBUG(g_logger) << "Fiber::Fiber id = " << m_id;
     //这个是真正的协程创建
     ++s_fiber_count;
     //不给就以配置为准
