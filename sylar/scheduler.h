@@ -69,6 +69,8 @@ protected:
     virtual void idle(); //没任务做
 
     void setThis();
+
+    bool hasIdleThreads() { return m_idleThreadCount > 0; }
 private:
     //无锁，模板类实现构造重载，妙
     template<class FiberOrCb>
