@@ -1,4 +1,4 @@
-#include "timer.c"
+#include "timer.h"
 #include "util.h"
 
 namespace sylar {
@@ -56,7 +56,7 @@ Timer::Timer(uint64_t next)
 
 bool Timer::cancel()
 {
-    TimerManager::RWMutextType::WriteLock lock(m_manager->m_mutex);
+    TimerManager::RWMutexType::WriteLock lock(m_manager->m_mutex);
     if(m_cb)
     {
         m_cb = nullptr;
@@ -71,7 +71,7 @@ bool Timer::cancel()
 
 bool Timer::refresh()
 {
-    TimerManager::RWMutextType::WriteLock lock(m_manager->m_mutex);
+    TimerManager::RWMutexType::WriteLock lock(m_manager->m_mutex);
     if(m_cb)
     {
         m_cb = nullptr;
@@ -92,7 +92,7 @@ bool Timer::refresh()
 
 bool Timer::reset(uint64_t ms, bool from_now)
 {
-    TimerManager::RWMutextType::WriteLock lock(m_manager->m_mutex);
+    TimerManager::RWMutexType::WriteLock lock(m_manager->m_mutex);
     if(m_cb)
     {
         if(ms == m_ms && !from_now)
@@ -107,10 +107,10 @@ bool Timer::reset(uint64_t ms, bool from_now)
             return false;
         
         m_manager->m_timers.erase(it);
-        uint64_t = start = 0;
+        uint64_t start = 0;
         if(from_now)
         {
-            start = sylar::GetCurrentMS()；
+            start = sylar::GetCurrentMS();
         }
         else
         {
@@ -128,10 +128,10 @@ bool Timer::reset(uint64_t ms, bool from_now)
 
 TimerManager::TimerManager()
 {
-    m_prevoiuseTime = sylar::GetCurrentMs();
+    m_previouseTime = sylar::GetCurrentMS();
 }
 
-virtual TimerManager::~TimerManager()
+TimerManager::~TimerManager()
 {
 
 }
@@ -167,7 +167,7 @@ Timer::ptr TimerManager::addConditionTimer(uint64_t ms, std::function<void()> cb
 
 uint64_t TimerManager::getNextTimer()
 {
-    RWMutextType::ReadLock lock(m_mutex);
+    RWMutexType::ReadLock lock(m_mutex);
     m_tickled = false;
     if(m_timers.empty())
     {
@@ -194,7 +194,7 @@ void TimerManager::listExpiredCb(std::vector<std::function<void()>>& cbs)
         RWMutexType::ReadLock lock(m_mutex);
         if(m_timers.empty())
         {
-            return
+            return;
         }
     }
     RWMutexType::WriteLock lock(m_mutex);
@@ -259,13 +259,13 @@ void TimerManager::addTimer(Timer::ptr val, RWMutexType::WriteLock& lock)
 bool TimerManager::detectClockRollover(uint64_t now_ms)
 {
     bool rollover = false;
-    if(now_ms < m_previousTime &&
+    if(now_ms < m_previouseTime &&
             now_ms < (m_previouseTime - 60 * 60 * 1000))
     {
         rollover = true;
     }
 
-    m_prevoiuseTime = now_ms;
+    m_previouseTime = now_ms;
     return rollover;
 }
 

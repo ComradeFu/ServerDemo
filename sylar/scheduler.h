@@ -1,5 +1,5 @@
 #ifndef __SYLAR_SCHEDULER_H__
-#define __SYALR_SCHEDULER_H__
+#define __SYLAR_SCHEDULER_H__
 
 #include <memory>
 #include <vector>

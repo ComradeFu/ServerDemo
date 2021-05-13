@@ -4,7 +4,7 @@
 
 #include <sys/epoll.h>
 #include <unistd.h>
-#include <fcntl.>
+#include <fcntl.h>
 #include <errno.h>
 #include <string.h>
 
@@ -17,7 +17,7 @@ IOManager::FdContext::EventContext& IOManager::FdContext::getContext(IOManager::
 {
     switch(event)
     {
-        case IOManger::READ:
+        case IOManager::READ:
             return read;
         case IOManager::WRITE:
             return write;
@@ -26,14 +26,14 @@ IOManager::FdContext::EventContext& IOManager::FdContext::getContext(IOManager::
     }
 }
 
-void IOManager::FdContext::resetContext(EventContext& ctx);
+void IOManager::FdContext::resetContext(EventContext& ctx)
 {
     ctx.scheduler = nullptr;
     ctx.fiber.reset();
-    ctx.cf = nullptr;
+    ctx.cb = nullptr;
 }
 
-void IOManager::FdContext::triggerEvent(IOManager::Event event);
+void IOManager::FdContext::triggerEvent(IOManager::Event event)
 {
     //这个方法都是外面加过锁了，所以里面都不用加
     SYLAR_ASSERT(events & event);
@@ -52,7 +52,7 @@ void IOManager::FdContext::triggerEvent(IOManager::Event event);
 
     //用完了
     ctx.scheduler = nullptr;
-    return true;
+    return;
 }
 
 IOManager::IOManager(size_t threads, bool use_caller, const std::string& name)
@@ -90,7 +90,7 @@ IOManager::IOManager(size_t threads, bool use_caller, const std::string& name)
     start();
 }
 
-~IOManager()
+IOManager::~IOManager()
 {
     stop();
     close(m_epfd);
@@ -101,7 +101,7 @@ IOManager::IOManager(size_t threads, bool use_caller, const std::string& name)
 
     for(size_t i = 0; i < m_fdContexts.size(); ++i)
     {
-        if(m_fdContexts)
+        if(m_fdContexts[i])
         {
             //如果已经分配出去了的
             delete m_fdContexts[i];
@@ -122,16 +122,16 @@ void IOManager::contextResize(size_t size)
         if(!m_fdContexts[i])
         {
             m_fdContexts[i] = new FdContext;
-            m_fdContexts[i].fd = i;
+            m_fdContexts[i]->fd = i;
         }
     }
 }
 
 //往epoll里面增加事件
-int IOManager::addEvent(int fd, Event event, std::function<void()> cb = nullptr)
+int IOManager::addEvent(int fd, Event event, std::function<void()> cb)
 {
     FdContext* fd_ctx = nullptr;
-    RWMutexTYpe::ReadLock lock(m_mutex);
+    RWMutexType::ReadLock lock(m_mutex);
 
     //看看 fd 是不是超出了允许的范围（所以需要读锁）
     if((int)m_fdContexts.size() > fd)
@@ -154,7 +154,7 @@ int IOManager::addEvent(int fd, Event event, std::function<void()> cb = nullptr)
     if(fd_ctx->events && event)
     {
         SYLAR_LOG_ERROR(g_logger) << "addEvent assert fd=" << fd
-                        << " event=" << event;
+                        << " event=" << event
                         << " fd_ctx.event=" << fd_ctx->events;
 
         //如果要加的 event 已经有了，那说明是有问题。意味着至少两个线程同时对一个ctx进行了操作。危险
@@ -209,60 +209,7 @@ int IOManager::addEvent(int fd, Event event, std::function<void()> cb = nullptr)
 
 bool IOManager::delEvent(int fd, Event event)
 {
-    RWMutextType::ReadLock lock(m_mutex);
-    if((int)m_fdContexts.size() <= fd)
-    {
-        //没有这个句柄
-        return false;
-    }
-
-    // 默认初始化，所以肯定有
-    // if(!m_fdContexts[fd])
-    // {
-        
-    // }
-
-    FdContext* fd_ctx = m_fdContexts[fd];
-    lock.unlock();
-
-    FdContext::MutexType::Lock lock(fd_ctx->mutex);
-    if(!(fd_ctx->events & event))
-    {
-        //没有事件
-        return false;
-    }
-
-    //类似add，反操作
-    Event new_events = (Event)(fd_ctx->events & ~event);
-    int op = new_event ? EPOLL_CTL_MOD : EPOLL_CTL_DEL;
-
-    epoll_event opevent;
-    epevent.events = EPOLLET | new_events;
-    epEvent.data.ptr = fd_ctx;
-
-    int rt = epoll_ctl(m_epfd, op, fd, &epevent);
-    if(rt)
-    {
-        //errno 是系统错误
-        SYLAR_LOG_ERROR(g_logger) << "epoll_ctl(" << m_epfd << ", "
-            << op << "," << fd << "," << epevent.events << "):"
-            << rt << " (" << errno << ") (" << strerror(errno) << ")";
-
-        return false;
-    }
-
-    --m_pendingEventCount;
-    fd_ctx->events = new_events;
-    FdContext::EventContext& event_ctx = fd_ctx->getContext(event);
-    fd_ctx->resetContext(event_ctx);
-
-    return true
-}
-
-//跟删除差不多。区别是 cancel 找到了对应的对象，把它强制触发执行。
-bool IOManager::cancelEvent(int fd, Event event)
-{
-    RWMutextType::ReadLock lock(m_mutex);
+    RWMutexType::ReadLock lock(m_mutex);
     if((int)m_fdContexts.size() <= fd)
     {
         //没有这个句柄
@@ -287,11 +234,64 @@ bool IOManager::cancelEvent(int fd, Event event)
 
     //类似add，反操作
     Event new_events = (Event)(fd_ctx->events & ~event);
-    int op = new_event ? EPOLL_CTL_MOD : EPOLL_CTL_DEL;
+    int op = new_events ? EPOLL_CTL_MOD : EPOLL_CTL_DEL;
 
-    epoll_event opevent;
+    epoll_event epevent;
     epevent.events = EPOLLET | new_events;
-    epEvent.data.ptr = fd_ctx;
+    epevent.data.ptr = fd_ctx;
+
+    int rt = epoll_ctl(m_epfd, op, fd, &epevent);
+    if(rt)
+    {
+        //errno 是系统错误
+        SYLAR_LOG_ERROR(g_logger) << "epoll_ctl(" << m_epfd << ", "
+            << op << "," << fd << "," << epevent.events << "):"
+            << rt << " (" << errno << ") (" << strerror(errno) << ")";
+
+        return false;
+    }
+
+    --m_pendingEventCount;
+    fd_ctx->events = new_events;
+    FdContext::EventContext& event_ctx = fd_ctx->getContext(event);
+    fd_ctx->resetContext(event_ctx);
+
+    return true;
+}
+
+//跟删除差不多。区别是 cancel 找到了对应的对象，把它强制触发执行。
+bool IOManager::cancelEvent(int fd, Event event)
+{
+    RWMutexType::ReadLock lock(m_mutex);
+    if((int)m_fdContexts.size() <= fd)
+    {
+        //没有这个句柄
+        return false;
+    }
+
+    // 默认初始化，所以肯定有
+    // if(!m_fdContexts[fd])
+    // {
+        
+    // }
+
+    FdContext* fd_ctx = m_fdContexts[fd];
+    lock.unlock();
+
+    FdContext::MutexType::Lock lock2(fd_ctx->mutex);
+    if(!(fd_ctx->events & event))
+    {
+        //没有事件
+        return false;
+    }
+
+    //类似add，反操作
+    Event new_events = (Event)(fd_ctx->events & ~event);
+    int op = new_events ? EPOLL_CTL_MOD : EPOLL_CTL_DEL;
+
+    epoll_event epevent;
+    epevent.events = EPOLLET | new_events;
+    epevent.data.ptr = fd_ctx;
 
     int rt = epoll_ctl(m_epfd, op, fd, &epevent);
     if(rt)
@@ -308,12 +308,12 @@ bool IOManager::cancelEvent(int fd, Event event)
     fd_ctx->triggerEvent(event);
     --m_pendingEventCount;
     
-    return true
+    return true;
 }
 
 bool IOManager::cancelAll(int fd)
 {
-    RWMutextType::ReadLock lock(m_mutex);
+    RWMutexType::ReadLock lock(m_mutex);
     if((int)m_fdContexts.size() <= fd)
     {
         //没有这个句柄
@@ -338,9 +338,9 @@ bool IOManager::cancelAll(int fd)
 
     int op = EPOLL_CTL_DEL;
 
-    epoll_event opevent;
+    epoll_event epevent;
     epevent.events = 0;
-    epEvent.data.ptr = fd_ctx;
+    epevent.data.ptr = fd_ctx;
 
     int rt = epoll_ctl(m_epfd, op, fd, &epevent);
     if(rt)
@@ -371,7 +371,7 @@ bool IOManager::cancelAll(int fd)
     // fd_ctx->resetContext(event_ctx);
 
     SYLAR_ASSERT(fd_ctx->events == 0);
-    return true
+    return true;
 }
 
 IOManager* IOManager::GetThis()
@@ -393,7 +393,7 @@ void IOManager::tickle()
     SYLAR_ASSERT(rt == 1); // 1 是实际写入的长度
 }
 
-void IOManager::stopping(uint64_t next_timeout)
+bool IOManager::stopping(uint64_t next_timeout)
 {
     next_timeout = getNextTimer();
     //处理完所有事件
@@ -402,7 +402,7 @@ void IOManager::stopping(uint64_t next_timeout)
         && Scheduler::stopping();
 }
 
-void IOManager::stopping()
+bool IOManager::stopping()
 {
     //scheduler 本身不需要这个值
     uint64_t next_timeout = 0;
@@ -442,7 +442,7 @@ void IOManager::idle()
             static const int MAX_TIMEOUT = 5000;
             if(next_timeout != ~0ull)
             {
-                next_timeout = (int)next_timeout > MAX_TIMOUT ? MAX_TIMEOUT : next_timeout;
+                next_timeout = (int)next_timeout > MAX_TIMEOUT ? MAX_TIMEOUT : next_timeout;
             }
             else
             {
@@ -553,7 +553,7 @@ void IOManager::idle()
     }
 }
 
-void IOManager::onTimerInsertedAtFront() override
+void IOManager::onTimerInsertedAtFront()
 {
     //先唤醒，然后重新计算一个时间
     tickle();

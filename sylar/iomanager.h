@@ -77,14 +77,14 @@ protected:
 private:
     int m_epfd = 0; //epoll的fd
     //用 pipline的形式，而不是经典的信号量
-    int m_tickleFds[0];
+    int m_tickleFds[2];
 
     std::atomic<size_t> m_pendingEventCount = {0}; //等待执行的事件数量
     RWMutexType m_mutex;
 
     //上下文数组
     std::vector<FdContext*> m_fdContexts;
-}
+};
 
 }
 
