@@ -22,6 +22,9 @@ void Backtrace(std::vector<std::string>& bt, int size = 64, int skip = 1);
 //下面的 skip 是2，是因为它调用了 Backtrace ，所以有两层
 std::string BacktraceToString(int size = 64, int skip = 2, const std::string& prefix = "");
 
+//时间ms
+uint64_t GetCurrentMS();
+uint64_t GetCurrentUS();
 }
 
 #endif

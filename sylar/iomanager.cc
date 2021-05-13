@@ -63,7 +63,7 @@ IOManager::IOManager(size_t threads, bool use_caller, const std::string& name)
 
     //使用管道
     int rt = pipe(m_tickleFds);
-    SYLAR_ASSERT(rt);
+    SYLAR_ASSERT(!rt);
 
     //epoll 的事件结构体
     epoll_event event;
@@ -75,11 +75,11 @@ IOManager::IOManager(size_t threads, bool use_caller, const std::string& name)
 
     //修改句柄的属性，设置成不阻塞
     rt = fcntl(m_tickleFds[0], F_SETFL, O_NONBLOCK);
-    SYLAR_ASSERT(rt);
+    SYLAR_ASSERT(!rt);
 
     //往句柄里面加事件
     rt = epoll_ctl(m_epfd, EPOLL_CTL_ADD, m_tickleFds[0], &event);
-    SYLAR_ASSERT(rt);
+    SYLAR_ASSERT(!rt);
 
     //默认给64个大小
     // m_fdContexts.resize(64);
@@ -134,7 +134,7 @@ int IOManager::addEvent(int fd, Event event, std::function<void()> cb = nullptr)
     RWMutexTYpe::ReadLock lock(m_mutex);
 
     //看看 fd 是不是超出了允许的范围（所以需要读锁）
-    if(m_fdContexts.size() > fd)
+    if((int)m_fdContexts.size() > fd)
     {
         fd_ctx = m_fdContexts[fd];
         lock.unlock();
@@ -144,13 +144,13 @@ int IOManager::addEvent(int fd, Event event, std::function<void()> cb = nullptr)
         //写锁，增加，动态扩容
         lock.unlock();
         RWMutexType::WriteLock lock(m_mutex);
-        //std 是x2的
-        contextResize(m_fdContexts.size() * 1.5);
+        //std 是x2的，为什么用fd不是本身的fd的size，是因为
+        contextResize(fd * 1.5);
         fd_ctx = m_fdContexts[fd];
     }
 
     //因为要修改它，也要加锁
-    FdContext::Mutex::Lock lock2(fd_ctx->mutex);
+    FdContext::MutexType::Lock lock2(fd_ctx->mutex);
     if(fd_ctx->events && event)
     {
         SYLAR_LOG_ERROR(g_logger) << "addEvent assert fd=" << fd
@@ -194,14 +194,14 @@ int IOManager::addEvent(int fd, Event event, std::function<void()> cb = nullptr)
     event_ctx.scheduler = Scheduler::GetThis();
     if(cb)
     {
-        context.cb.swap(cb);
+        event_ctx.cb.swap(cb);
     }
     else
     {
         //如果没指定，就把协程放进去
-        context.fiber = Fiber::GetThis();
+        event_ctx.fiber = Fiber::GetThis();
         //肯定是正在执行中的
-        SYLAR_ASSERT(context.fiber->getState() == Fiber::EXEC);
+        SYLAR_ASSERT(event_ctx.fiber->getState() == Fiber::EXEC);
     }
 
     return 0;
@@ -210,7 +210,7 @@ int IOManager::addEvent(int fd, Event event, std::function<void()> cb = nullptr)
 bool IOManager::delEvent(int fd, Event event)
 {
     RWMutextType::ReadLock lock(m_mutex);
-    if(m_fdContexts.size() <= fd)
+    if((int)m_fdContexts.size() <= fd)
     {
         //没有这个句柄
         return false;
@@ -263,7 +263,7 @@ bool IOManager::delEvent(int fd, Event event)
 bool IOManager::cancelEvent(int fd, Event event)
 {
     RWMutextType::ReadLock lock(m_mutex);
-    if(m_fdContexts.size() <= fd)
+    if((int)m_fdContexts.size() <= fd)
     {
         //没有这个句柄
         return false;
@@ -314,7 +314,7 @@ bool IOManager::cancelEvent(int fd, Event event)
 bool IOManager::cancelAll(int fd)
 {
     RWMutextType::ReadLock lock(m_mutex);
-    if(m_fdContexts.size() <= fd)
+    if((int)m_fdContexts.size() <= fd)
     {
         //没有这个句柄
         return false;
@@ -393,11 +393,20 @@ void IOManager::tickle()
     SYLAR_ASSERT(rt == 1); // 1 是实际写入的长度
 }
 
+void IOManager::stopping(uint64_t next_timeout)
+{
+    next_timeout = getNextTimer();
+    //处理完所有事件
+    return m_pendingEventCount == 0
+        && next_timeout == ~0ull
+        && Scheduler::stopping();
+}
+
 void IOManager::stopping()
 {
-    //处理完所有事件
-    return Scheduler::stopping()
-        && m_pendingEventCount == 0;
+    //scheduler 本身不需要这个值
+    uint64_t next_timeout = 0;
+    return stopping(next_timeout);
 }
 
 //core，利用 epoll
@@ -409,15 +418,21 @@ void IOManager::idle()
     //虽然智能指针不支持数组，但可以利用析构函数来搞
     //这个 shared_events 在真正用的时候，不用它。只是说离开了这个idle就自动析构
     std::shared_ptr<epoll_event> shared_events(events, [](epoll_event* ptr){
-        delete[] events;
+        delete[] ptr;
     });
 
     while(true)
     {
+        uint64_t next_timeout = 0;
         if(stopping())
         {
-            SYLAR_LOG_INFO(g_logger) << "name=" << m_name << " idle stopping exit";
-            break;
+            //为什么不用上面的 hasTimer()，是少了一把锁
+            next_timeout = getNextTimer();
+            if(next_timeout == ~0ull)
+            {
+                SYLAR_LOG_INFO(g_logger) << "name=" << getName() << " idle stopping exit";
+                break;
+            }
         }
 
         //实际的长度（事件数）
@@ -425,8 +440,16 @@ void IOManager::idle()
         do
         {
             static const int MAX_TIMEOUT = 5000;
+            if(next_timeout != ~0ull)
+            {
+                next_timeout = (int)next_timeout > MAX_TIMOUT ? MAX_TIMEOUT : next_timeout;
+            }
+            else
+            {
+                next_timeout = MAX_TIMEOUT;
+            }
             //没有事件回来，五秒之后也会唤醒，64 就是上面的一次返回处理的数量
-            rt = epoll_wait(m_epfd, events, 64, MAX_TIMEOUT);
+            rt = epoll_wait(m_epfd, events, 64, (int)next_timeout);
 
             //EINTR 操作系统返回的中断，指示再去epoll一次
             if(rt < 0 && errno == EINTR)
@@ -438,6 +461,16 @@ void IOManager::idle()
                 break;
             }
         } while(true);
+
+        //统一先处理一次定时器
+        std::vector<std::function<void()>> cbs;
+        listExpiredCb(cbs);
+
+        if(!cbs.empty())
+        {
+            schedule(cbs.begin(), cbs.end());
+            cbs.clear();
+        }
 
         for(int i = 0; i < rt; ++i)
         {
@@ -453,7 +486,7 @@ void IOManager::idle()
                 continue;
             }
 
-            FdContext* fd_ctx = event.data.ptr;
+            FdContext* fd_ctx = (FdContext*)event.data.ptr;
             //要操作它
             FdContext::MutexType::Lock lock(fd_ctx->mutex);
             if(event.events & (EPOLLERR | EPOLLHUP))
@@ -511,13 +544,20 @@ void IOManager::idle()
         }
 
         //处理完之后，就让出来
-        Fiber::ptr cur = FIber::GetThis();
+        Fiber::ptr cur = Fiber::GetThis();
         auto raw_ptr = cur.get();
         cur.reset();
 
         //回到调度器的 main fiber 里面去
         raw_ptr->swapOut();
     }
+}
+
+void IOManager::onTimerInsertedAtFront() override
+{
+    //先唤醒，然后重新计算一个时间
+    tickle();
+
 }
 
 } // namespace sylar

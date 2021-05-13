@@ -3,6 +3,7 @@
 
 #include "log.h"
 #include "fiber.h"
+#include <sys/time.h>
 
 namespace sylar {
 
@@ -59,4 +60,21 @@ std::string BacktraceToString(int size, int skip, const std::string& prefix)
 
     return ss.str();
 }
+
+//毫秒
+uint64_t GetCurrentMS()
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return tv.tv_sec * 1000ul + tv.tv_usec / 1000;
+}
+
+//纳秒
+uint64_t GetCurrentUS()
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return tv.tv_sec * 1000 * 1000ul + tv.tv_usec;
+}
+
 }
