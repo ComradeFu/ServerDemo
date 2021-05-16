@@ -1,6 +1,7 @@
 #include "scheduler.h"
 #include "log.h"
 #include "macro.h"
+#include "hook.h"
 
 namespace sylar 
 {
@@ -200,6 +201,8 @@ void Scheduler::setThis()
 void Scheduler::run()
 {
     SYLAR_LOG_INFO(g_logger) << "scheculer run.";
+    // scheduler 一定要 hook，不然就失去意义了
+    set_hook_enable(true);
     setThis();
 
     if(sylar::GetThreadId() != m_rootThread)
