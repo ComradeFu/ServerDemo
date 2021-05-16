@@ -40,23 +40,23 @@ void test1()
     });
 }
 
-// void test_timer()
-// {
-//     sylar::IOManager iom(2);
-//     //lambda
-//     auto timer = iom.addTimer(1000, [&timer](){
-//         SYLAR_LOG_INFO(g_logger) << "hello timer";
-//         static int i = 0;
-//         if(++i == 5)
-//         {
-//             timer->cancel(i);
-//         }
-//     },true);
-// }
+void test_timer()
+{
+    sylar::IOManager iom(2);
+    //lambda
+    sylar::Timer::ptr timer = iom.addTimer(1000, [&timer](){
+        SYLAR_LOG_INFO(g_logger) << "hello timer";
+        static int i = 0;
+        if(++i == 5)
+        {
+            timer->cancel();
+        }
+    },true);
+}
 
 int main(int argc, char** argv)
 {
-    test1();
-    // test_timer();
+    // test1();
+    test_timer();
     return 0;
 }
