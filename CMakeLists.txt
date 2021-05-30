@@ -30,6 +30,7 @@ set(LIB_SRC
     sylar/thread.cc
     sylar/iomanager.cc
     sylar/timer.cc
+    sylar/fd_manager.cc
     sylar/hook.cc
     )
 

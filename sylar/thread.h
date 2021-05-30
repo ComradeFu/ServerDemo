@@ -14,12 +14,13 @@
 #include <semaphore.h>
 #include <stdint.h>
 #include <atomic>
+#include "noncopyable.h"
 
 namespace sylar
 {
 
 //信号量
-class Semaphore
+class Semaphore : Noncopyable
 {
 public:
     //默认信号量是0
@@ -31,13 +32,6 @@ public:
     void notify(); // +1
 
 private:
-    //同样禁止，c++11 方式，直接删除掉把
-    Semaphore(const Semaphore&) = delete;
-    Semaphore(const Semaphore&&) = delete;
-    Semaphore& operator=(const Semaphore&) = delete;
-
-private:
-
     sem_t m_semaphore;
 };
 
@@ -165,7 +159,7 @@ private:
 };
 
 //不分读写的锁，try 方法短时间内还不需要，就不加了
-class Mutex {
+class Mutex : Noncopyable {
 public:
     //没有 rw，只有lock
     typedef ScopedLockImpl<Mutex> Lock;
@@ -195,7 +189,7 @@ private:
 };
 
 //空的锁，什么都不干。用来测试（就不用在加好锁的地方注释来测试了）
-class NullMutex
+class NullMutex : Noncopyable
 {
 public:
     typedef ScopedLockImpl<NullMutex> Lock;
@@ -206,7 +200,8 @@ public:
 };
 
 //读写锁
-class RWMutex {
+class RWMutex : Noncopyable
+{
 public:
     typedef ReadScopedLockImpl<RWMutex> ReadLock;
     typedef WriteScopedLockImpl<RWMutex> WriteLock;
@@ -239,7 +234,7 @@ private:
 };
 
 //空的锁，什么都不干。用来测试（就不用在加好锁的地方注释来测试了）
-class NullRWMutex
+class NullRWMutex : Noncopyable
 {
 public:
     typedef ReadScopedLockImpl<NullRWMutex> ReadLock;
@@ -257,7 +252,7 @@ public:
 //这把锁在遇到资源等待的时候，并不会马上切换到内核态。而是在 cpu 上空跑一段时间。
 //也就是说，会导致 cpu 占用比较高，但是它的恢复会更快。使用竞争很短的场景。日志就是了
 //也就是大名鼎鼎的“自旋锁”。linux说，只有非常清楚自己在干什么，并且锁阻塞时间能够准确预估的时候才使用。
-class Spinlock
+class Spinlock : Noncopyable
 {
 public:
     typedef ScopedLockImpl<Spinlock> Lock;
@@ -294,7 +289,7 @@ private:
 //再后来实测一个线程无锁（NullMutex）去写，也就是 20m 1s 左右的速度了
 //结合日志系统的实际来考虑，确实也是这样，日志系统就是 1 by 1 去写的，不可能同时进行（否则串台）
 //也就是 spinlock 已经相当好了
-class CASLock
+class CASLock : Noncopyable
 {
 public:
     typedef ScopedLockImpl<CASLock> Lock;
@@ -321,7 +316,8 @@ private:
     volatile std::atomic_flag m_mutex;
 };
 
-class Thread{
+class Thread
+{
 public:
     typedef std::shared_ptr<Thread> ptr;
     Thread(std::function<void()> cb, const std::string& name);

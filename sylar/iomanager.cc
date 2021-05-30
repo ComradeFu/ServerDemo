@@ -35,6 +35,7 @@ void IOManager::FdContext::resetContext(EventContext& ctx)
 
 void IOManager::FdContext::triggerEvent(IOManager::Event event)
 {
+    SYLAR_LOG_INFO(g_logger) << "trigger event fd:" << this->fd << ", event:" << event;
     //这个方法都是外面加过锁了，所以里面都不用加
     SYLAR_ASSERT(events & event);
     events = (Event)(events & ~event);
@@ -130,6 +131,7 @@ void IOManager::contextResize(size_t size)
 //往epoll里面增加事件
 int IOManager::addEvent(int fd, Event event, std::function<void()> cb)
 {
+    SYLAR_LOG_INFO(g_logger) << "add event fd:" << fd << ", event:" << event;
     FdContext* fd_ctx = nullptr;
     RWMutexType::ReadLock lock(m_mutex);
 
@@ -168,6 +170,8 @@ int IOManager::addEvent(int fd, Event event, std::function<void()> cb)
     //我们用的是 ET 模式，位操作加上新的 event
     epevent.events = EPOLLET | fd_ctx->events | event;
     epevent.data.ptr = fd_ctx; //回调的时候，就能拿到是在哪个 fd_ctx 上触发的
+
+    SYLAR_LOG_INFO(g_logger) << "epoll ctl add fd " << fd << ", event:" << epevent.events;
 
     int rt = epoll_ctl(m_epfd, op, fd, &epevent);
     if(rt)
@@ -492,16 +496,17 @@ void IOManager::idle()
             if(event.events & (EPOLLERR | EPOLLHUP))
             {
                 //错误或者中断，就加一些读写，让能反应
-                event.events |= EPOLLIN | EPOLLOUT;
+                // event.events |= EPOLLIN | EPOLLOUT;//我去，这里写错了。导致 iomanager assert了错误事件（没有监听却trigger）
+                event.events |= (EPOLLIN | EPOLLOUT) & fd_ctx->events;
             }
 
             //只关心两个事件
             int real_events = NONE;
-            if(event.events && EPOLLIN)
+            if(event.events & EPOLLIN)
             {
                 real_events |= READ;
             }
-            if(event.events && EPOLLOUT)
+            if(event.events & EPOLLOUT)
             {
                 real_events |= WRITE;
             }
