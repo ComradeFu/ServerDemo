@@ -58,23 +58,26 @@ void test_sock()
         return;
     }
 
-    //不用 char* 的数组，因为直接在栈空间搞数组，会占用太大。导致协程切换不够快。
-    //string 在超过一定长度之后会挪到堆上（看不同的编译器，比如 vs2005 就是 16bytes）
-    std::string buff;
-    buff.resize(4096);
-
-    rt = recv(sock, &buff[0], buff.size(), 0);
-    SYLAR_LOG_INFO(g_logger) << "rcv rt=" << rt << " errno=" << errno;
-
-    if(rt <= 0)
+    while(true)
     {
-        return;
+        //不用 char* 的数组，因为直接在栈空间搞数组，会占用太大。导致协程切换不够快。
+        //string 在超过一定长度之后会挪到堆上（看不同的编译器，比如 vs2005 就是 16bytes）
+        std::string buff;
+        buff.resize(4096);
+
+        rt = recv(sock, &buff[0], buff.size(), 0);
+        SYLAR_LOG_INFO(g_logger) << "rcv rt=" << rt << " errno=" << errno;
+
+        if(rt <= 0)
+        {
+            return;
+        }
+
+        buff.resize(rt);
+
+        //明文回复的html
+        SYLAR_LOG_INFO(g_logger) << buff;
     }
-
-    buff.resize(rt);
-
-    //明文回复的html
-    SYLAR_LOG_INFO(g_logger) << buff;
 }   
 
 int main(int argc, char** argv)

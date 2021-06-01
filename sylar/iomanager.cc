@@ -35,7 +35,6 @@ void IOManager::FdContext::resetContext(EventContext& ctx)
 
 void IOManager::FdContext::triggerEvent(IOManager::Event event)
 {
-    SYLAR_LOG_INFO(g_logger) << "trigger event fd:" << this->fd << ", event:" << event;
     //这个方法都是外面加过锁了，所以里面都不用加
     SYLAR_ASSERT(events & event);
     events = (Event)(events & ~event);
@@ -131,7 +130,6 @@ void IOManager::contextResize(size_t size)
 //往epoll里面增加事件
 int IOManager::addEvent(int fd, Event event, std::function<void()> cb)
 {
-    SYLAR_LOG_INFO(g_logger) << "add event fd:" << fd << ", event:" << event;
     FdContext* fd_ctx = nullptr;
     RWMutexType::ReadLock lock(m_mutex);
 
@@ -170,8 +168,6 @@ int IOManager::addEvent(int fd, Event event, std::function<void()> cb)
     //我们用的是 ET 模式，位操作加上新的 event
     epevent.events = EPOLLET | fd_ctx->events | event;
     epevent.data.ptr = fd_ctx; //回调的时候，就能拿到是在哪个 fd_ctx 上触发的
-
-    SYLAR_LOG_INFO(g_logger) << "epoll ctl add fd " << fd << ", event:" << epevent.events;
 
     int rt = epoll_ctl(m_epfd, op, fd, &epevent);
     if(rt)
