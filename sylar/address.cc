@@ -353,6 +353,7 @@ IPAddress::ptr IPAddress::Create(const char* address, uint32_t port)
             result->setPort(port);
 
         //这里存疑，因为free之后，确定不会造成 result 的内存无效引用吗？
+        //不会，因为在构造函数中的 m_addr = address 已经发生了浅拷贝了（已经足够）
         freeaddrinfo(results);
 
         return result;
