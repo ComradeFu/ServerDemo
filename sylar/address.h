@@ -36,7 +36,7 @@ public:
     static Address::ptr LookupAny(const std::string& host,
                         int family = AF_UNSPEC, int type = 0, int protocol = 0);
     //只需要返回IPAddress，还不能直接使用 IPAddress::ptr ...
-    static shared_ptr<IPAddress> LookupAnyIPAddress(const std::string& host,
+    static std::shared_ptr<IPAddress> LookupAnyIPAddress(const std::string& host,
                         int family = AF_UNSPEC, int type = 0, int protocol = 0);
 
 
@@ -45,7 +45,7 @@ public:
         ,int family = AF_UNSPEC);
 
     //指定某个网卡的
-    static bool GetInterfaceAddresses(std::vector<std::pair<Address:ptr, uint32_t>>& result
+    static bool GetInterfaceAddresses(std::vector<std::pair<Address::ptr, uint32_t>>& result
         ,const std::string& iface, int family = AF_UNSPEC);
 
     //基类，必须
@@ -72,7 +72,7 @@ class IPAddress : public Address
 public:
     typedef std::shared_ptr<IPAddress> ptr;
 
-    static IPAdress::ptr Create(const char* address, uint32_t port = 0);
+    static IPAddress::ptr Create(const char* address, uint32_t port = 0);
 
     virtual IPAddress::ptr broadcastAddress(uint32_t prefix_len) = 0;
     virtual IPAddress::ptr networkAddress(uint32_t prefix_len) = 0;
@@ -114,7 +114,7 @@ class IPv6Address : public IPAddress
 {
 public:
     typedef std::shared_ptr<IPv6Address> ptr;
-    static IPv6Address::ptr (const char* address, uint32_t port = 0);
+    static IPv6Address::ptr Create(const char* address, uint32_t port = 0);
     IPv6Address();
     IPv6Address(const sockaddr_in6& address);
     IPv6Address(const uint8_t addrss[16], uint32_t port = 0);

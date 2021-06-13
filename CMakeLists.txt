@@ -23,6 +23,7 @@ link_directories(/usr/local/lib64/)
 
 set(LIB_SRC 
     sylar/log.cc
+    sylar/address.cc
     sylar/scheduler.cc
     sylar/fiber.cc
     sylar/util.cc
@@ -32,7 +33,6 @@ set(LIB_SRC
     sylar/timer.cc
     sylar/fd_manager.cc
     sylar/hook.cc
-    sylar/address.cc
     )
 
 add_library(sylar SHARED ${LIB_SRC})

@@ -46,6 +46,7 @@ byteswap(T value)
 #define SYLAR_BYTE_ORDER SYLAR_BIG_ENDIAN
 #else
 #define SYLAR_BYTE_ORDER SYLAR_LITTLE_ENDIAN
+#endif
 
 #if SYLAR_BYTE_ORDER == SYLAR_BIG_ENDIAN
 template<class T>
@@ -71,6 +72,7 @@ T byteswapOnBigEndian(T t)
 {
     return t;
 }
+#endif
 
 }
 

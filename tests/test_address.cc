@@ -1,5 +1,5 @@
-#include "address.h"
-#include "log.h"
+#include "sylar/address.h"
+#include "sylar/log.h"
 
 sylar::Logger::ptr g_logger = SYLAR_LOG_ROOT();
 
@@ -26,7 +26,7 @@ void test_iface()
     std::multimap<std::string, std::pair<sylar::Address::ptr, uint32_t>> results;
 
     bool v = sylar::Address::GetInterfaceAddresses(results);
-    for(!v)
+    if(!v)
     {
         SYLAR_LOG_ERROR(g_logger) << "GetInterface fail.";
         return;
