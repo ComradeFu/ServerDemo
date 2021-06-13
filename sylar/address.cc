@@ -320,7 +320,8 @@ IPAddress::ptr IPAddress::Create(const char* address, uint32_t port)
     addrinfo hints, *results;
     memset(&hints, 0, sizeof(addrinfo));
 
-    hints.ai_flags = AI_NUMERICHOST;
+    //下面的选项是只限定 "127.0.0.1" 之类的数字ip
+    // hints.ai_flags = AI_NUMERICHOST;
     hints.ai_family = AF_UNSPEC;
 
     int error = getaddrinfo(address, NULL, &hints, &results);

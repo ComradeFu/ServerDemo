@@ -8,7 +8,7 @@ void test()
     std::vector<sylar::Address::ptr> addrs;
 
     SYLAR_LOG_INFO(g_logger) << "begin";
-    bool v = sylar::Address::Lookup(addrs, "www.baidu.com");
+    bool v = sylar::Address::Lookup(addrs, "nas.fuguangze.com");
     if(!v)
     {
         SYLAR_LOG_ERROR(g_logger) << "lookup fail";
@@ -41,8 +41,8 @@ void test_iface()
 
 void test_ipv4()
 {
-    // auto addr = sylar::IPAddress::Create("www.baidu.com");
-    auto addr = sylar::IPAddress::Create("127.0.0.8");
+    auto addr = sylar::IPAddress::Create("www.baidu.com");
+    // auto addr = sylar::IPAddress::Create("127.0.0.8");
     if(addr)
     {
         SYLAR_LOG_INFO(g_logger) << addr->toString();
@@ -51,9 +51,11 @@ void test_ipv4()
 
 int main(int argc, char** argv)
 {
-    test();
+    // test();
 
-    test_iface();
+    // test_iface();
+
+    test_ipv4();
 
     return 0;
 }
