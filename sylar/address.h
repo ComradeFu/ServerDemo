@@ -29,15 +29,15 @@ public:
     
     //用socket的结构体，给创建出来一个地址对象
     static Address::ptr Create(const sockaddr* addr, socklen_t addrlen);
-    //unspec 是任意类型
+    //unspec 是任意类型, AF_INET 还是最多的。unspec 会尝试去解析 IPv6，很慢很慢才能返回
     static bool Lookup(std::vector<Address::ptr>& result, const std::string& host,
-                        int family = AF_UNSPEC, int type = 0, int protocol = 0);
+                        int family = AF_INET, int type = 0, int protocol = 0);
     //返回第一个
     static Address::ptr LookupAny(const std::string& host,
-                        int family = AF_UNSPEC, int type = 0, int protocol = 0);
+                        int family = AF_INET, int type = 0, int protocol = 0);
     //只需要返回IPAddress，还不能直接使用 IPAddress::ptr ...
     static std::shared_ptr<IPAddress> LookupAnyIPAddress(const std::string& host,
-                        int family = AF_UNSPEC, int type = 0, int protocol = 0);
+                        int family = AF_INET, int type = 0, int protocol = 0);
 
 
     //通过网卡获取服务器里相关的信息，ip addr 指令可验证
@@ -55,6 +55,8 @@ public:
     int getFamily() const;
 
     virtual const sockaddr* getAddr() const = 0;
+    //非const版本重载，不然其他函数需要用到 addr 时无法引用
+    virtual sockaddr* getAddr() = 0;
     virtual socklen_t getAddrLen() const = 0;
 
     virtual std::ostream& insert(std::ostream& os) const = 0;
@@ -72,14 +74,14 @@ class IPAddress : public Address
 public:
     typedef std::shared_ptr<IPAddress> ptr;
 
-    static IPAddress::ptr Create(const char* address, uint32_t port = 0);
+    static IPAddress::ptr Create(const char* address, uint16_t port = 0);
 
     virtual IPAddress::ptr broadcastAddress(uint32_t prefix_len) = 0;
     virtual IPAddress::ptr networkAddress(uint32_t prefix_len) = 0;
     virtual IPAddress::ptr subnetMask(uint32_t prefix_len) = 0;
 
     virtual uint32_t getPort() const = 0;
-    virtual void setPort(uint32_t v) = 0;
+    virtual void setPort(uint16_t v) = 0;
 };
 
 class IPv4Address : public IPAddress
@@ -88,13 +90,15 @@ public:
     typedef std::shared_ptr<IPv4Address> ptr;
 
     //根据字符串地址直接初始化
-    static IPv4Address::ptr Create(const char* address, uint32_t port = 0);
+    static IPv4Address::ptr Create(const char* address, uint16_t port = 0);
 
     IPv4Address(const sockaddr_in& address);
     //IPv4 的地址本质上就是一个 int
-    IPv4Address(uint32_t address = INADDR_ANY, uint32_t port = 0);
+    IPv4Address(uint32_t address = INADDR_ANY, uint16_t port = 0);
 
     const sockaddr* getAddr() const override;
+    //非const版本重载
+    sockaddr* getAddr() override;
     socklen_t getAddrLen() const override;
 
     virtual std::ostream& insert(std::ostream& os) const override;
@@ -104,7 +108,7 @@ public:
     IPAddress::ptr subnetMask(uint32_t prefix_len) override;
 
     uint32_t getPort() const override;
-    void setPort(uint32_t v) override;
+    void setPort(uint16_t v) override;
 private:
     //其实就一个地址，其他方法都是对这个地址的快捷操作
     sockaddr_in m_addr;
@@ -114,12 +118,14 @@ class IPv6Address : public IPAddress
 {
 public:
     typedef std::shared_ptr<IPv6Address> ptr;
-    static IPv6Address::ptr Create(const char* address, uint32_t port = 0);
+    static IPv6Address::ptr Create(const char* address, uint16_t port = 0);
     IPv6Address();
     IPv6Address(const sockaddr_in6& address);
-    IPv6Address(const uint8_t addrss[16], uint32_t port = 0);
+    IPv6Address(const uint8_t addrss[16], uint16_t port = 0);
 
     const sockaddr* getAddr() const override;
+    //非const版本重载
+    sockaddr* getAddr() override;
     socklen_t getAddrLen() const override;
 
     virtual std::ostream& insert(std::ostream& os) const override;
@@ -129,7 +135,7 @@ public:
     IPAddress::ptr subnetMask(uint32_t prefix_len) override;
 
     uint32_t getPort() const override;
-    void setPort(uint32_t v) override;
+    void setPort(uint16_t v) override;
 private:
     //跟IPv4不同之处
     sockaddr_in6 m_addr;
@@ -144,7 +150,10 @@ public:
     UnixAddress(const std::string& path);
 
     const sockaddr* getAddr() const override;
+    //非const版本重载，给 sendTo 使用。不然返回 const 就没办法进行修改了
+    sockaddr* getAddr() override;
     socklen_t getAddrLen() const override;
+    void setAddrLen(uint32_t v);
     virtual std::ostream& insert(std::ostream& os) const override;
 
 private:
@@ -161,6 +170,8 @@ public:
     UnknowAddress(int family);
     UnknowAddress(const sockaddr& addr);
     const sockaddr* getAddr() const override;
+    //非const版本重载
+    sockaddr* getAddr() override;
     socklen_t getAddrLen() const override;
     virtual std::ostream& insert(std::ostream& os) const override;
 private:
