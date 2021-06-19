@@ -47,7 +47,7 @@ void test_socket()
         return;
     }
 
-    buffs.resize(rt)
+    buffs.resize(rt);
     SYLAR_LOG_INFO(g_logger) << buffs;
 }
 

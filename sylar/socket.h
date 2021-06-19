@@ -9,7 +9,7 @@ namespace sylar
 {
 
 //因为可能要自己用到自己
-class Socket : public std::enable_shared_from_this<Socket>， Noncopyable
+class Socket : public std::enable_shared_from_this<Socket>, Noncopyable
 {
 public:
     typedef std::shared_ptr<Socket> ptr;
@@ -20,14 +20,14 @@ public:
     {
         TCP = SOCK_STREAM,
         UDP = SOCK_DGRAM,
-    }
+    };
 
     enum Family
     {
         IPv4 = AF_INET, 
         IPv6 = AF_INET6,
         UNIX = AF_UNIX,
-    }
+    };
 
     //便捷函数，根据address 来创建一个 socket。因为 address 里面就含有family这些信息了
     static Socket::ptr CreateTCP(sylar::Address::ptr address);

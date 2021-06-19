@@ -305,6 +305,13 @@ int socket(int domain, int type, int protocol)
     return fd;
 }
 
+// 第一步：使用socket创建套接口；
+// 第二步：设置套接口为非阻塞模式（默认为阻塞模式）;
+// 第三步：调用connect进行连接；
+// 第四步：判断第三步connect的返回值，如果返回值为0，表示连接立即成功，至此连接全部完成，不用再进行下面的步骤；
+// 第五步：判断第三步connect的返回值，如果返回值不为0，此时有两种情况：第一种情况errno为EINPROGRESS，表示连接没有立即成功，需进行二次判断，进入第六步；第二种情况errno不为EINPROGRESS，表示连接失败，调用close关闭套接口之后，再次connect；
+// 第六步：将该套接口加入epoll中，调用epoll_wait等待套接口的通知；
+// 第七步：如果连接成功，正常情况下epoll触发EPOLLOUT事件，不会触发EPOLLIN事件。但有一种情况，如果connect成功之后，服务端马上发送数据，此时客户端也会立刻得到EPOLLIN事件。如果连接失败，我们会得到EPOLLIN、EPOLLOUT、EPOLLERR和EPOLLHUP事件。
 int connect_with_timeout(int fd, const struct sockaddr* addr, socklen_t addrlen, uint64_t timeout_ms)
 {
     if(!sylar::t_hook_enable)
@@ -329,6 +336,8 @@ int connect_with_timeout(int fd, const struct sockaddr* addr, socklen_t addrlen,
         return connect_f(fd, addr, addrlen);
     }
 
+    //这里有一个问题，如果这里返回了，会导致IOMnagaer的epoll没有加到这个事件，cancel的时候会出现没有此fd
+    //但如果fd已经设置为非阻塞，这里又是一定返回 -1 的。emmm
     int n = connect_f(fd, addr, addrlen);
     if(n == 0)
         return 0;
@@ -473,6 +482,7 @@ ssize_t sendmsg(int s, const struct msghdr *msg, int flags)
 
 int close(int fd)
 {
+    SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "close fd=" << fd;
     //跟 accept 类似，也有一些区别，就是要清理一下fd
     if(!sylar::t_hook_enable)
         return close_f(fd);

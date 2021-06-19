@@ -20,52 +20,52 @@ static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
 Socket::ptr Socket::CreateTCP(sylar::Address::ptr address)
 {
     //ipv4、ipv6、unixsocket
-    Socket::ptr sock(newSocket(address->getFamily(), TCP, 0));
+    Socket::ptr sock(new Socket(address->getFamily(), TCP, 0));
     return sock;
 }
 
 Socket::ptr Socket::CreateUDP(sylar::Address::ptr address)
 {
-    Socket::ptr sock(newSocket(address->getFamily(), UDP, 0));
+    Socket::ptr sock(new Socket(address->getFamily(), UDP, 0));
     return sock;
 }
 
 //IPv4
 Socket::ptr Socket::CreateTCPSocket()
 {
-    Socket::ptr sock(newSocket(IPv4, TCP, 0));
+    Socket::ptr sock(new Socket(IPv4, TCP, 0));
     return sock;
 }
 
 Socket::ptr Socket::CreateUDPSocket()
 {
-    Socket::ptr sock(newSocket(IPv4, UDP, 0));
+    Socket::ptr sock(new Socket(IPv4, UDP, 0));
     return sock;
 }
 
 //IPv6
 Socket::ptr Socket::CreateTCPSocket6()
 {
-    Socket::ptr sock(newSocket(IPv6, TCP, 0));
+    Socket::ptr sock(new Socket(IPv6, TCP, 0));
     return sock;
 }
 
 Socket::ptr Socket::CreateUDPSocket6()
 {
-    Socket::ptr sock(newSocket(IPv6, UDP, 0));
+    Socket::ptr sock(new Socket(IPv6, UDP, 0));
     return sock;
 }
 
 //Unix socket
 Socket::ptr Socket::CreateUnixTCPSocket()
 {
-    Socket::ptr sock(newSocket(UNIX, TCP, 0));
+    Socket::ptr sock(new Socket(UNIX, TCP, 0));
     return sock;
 }
 
 Socket::ptr Socket::CreateUnixUDPSocket()
 {
-    Socket::ptr sock(newSocket(UNIX, UDP, 0));
+    Socket::ptr sock(new Socket(UNIX, UDP, 0));
     return sock;
 }
 
@@ -117,7 +117,7 @@ void Socket::setRecvTimeout(uint64_t v)
 {
      struct timeval tv{int(v / 1000), int(v % 1000 * 1000)};
     //自己封装的
-    return setOption(SOL_SOCKET, SO_RCVTIMEO, tv);
+    setOption(SOL_SOCKET, SO_RCVTIMEO, tv);
 }
 
 bool Socket::getOption(int level, int option, void* result, size_t* len)
@@ -135,7 +135,7 @@ bool Socket::getOption(int level, int option, void* result, size_t* len)
     return true;
 }
 
-bool Socket::setOption(int level, int option, const void* value, size_t len)
+bool Socket::setOption(int level, int option, const void* result, size_t len)
 {
     if(setsockopt(m_sock, level, option, result, (socklen_t)len))
     {
@@ -330,7 +330,7 @@ int Socket::sendTo(const void* buffer, size_t length, const Address::ptr to, int
 {
     if(isConnected())
     {
-        return ::sendTo(m_sock, buffer, length, flags, to->getAddr(), to->getAddrLen());
+        return ::sendto(m_sock, buffer, length, flags, to->getAddr(), to->getAddrLen());
     }
     return -1;
 }
@@ -379,7 +379,7 @@ int Socket::recvFrom(void* buffer, size_t length, Address::ptr from, int flags)
     if(isConnected())
     {
         socklen_t len = from->getAddrLen();
-        return ::recvfrom(m_sock, buffer, length, flags, from->getName(), &len);
+        return ::recvfrom(m_sock, buffer, length, flags, from->getAddr(), &len);
     }
     return -1;
 }
@@ -429,8 +429,8 @@ Address::ptr Socket::getRemoteAddress()
     if(getpeername(m_sock, result->getAddr(), &addrlen))
     {
         SYLAR_LOG_ERROR(g_logger) << "getpeername error sock=" << m_sock
-            << " errno=" << errno << " errstr=" strerror(errno);
-        return Addreess::ptr(new UnknownAddress(m_family));
+            << " errno=" << errno << " errstr=" << strerror(errno);
+        return Address::ptr(new UnknownAddress(m_family));
     }
     if(m_family == AF_UNIX)
     {
@@ -471,8 +471,8 @@ Address::ptr Socket::getLocalAddress()
     if(getsockname(m_sock, result->getAddr(), &addrlen))
     {
         SYLAR_LOG_ERROR(g_logger) << "getsockname error sock=" << m_sock
-            << " errno=" << errno << " errstr=" strerror(errno);
-        return Addreess::ptr(new UnknownAddress(m_family));
+            << " errno=" << errno << " errstr=" << strerror(errno);
+        return Address::ptr(new UnknownAddress(m_family));
     }
     if(m_family == AF_UNIX)
     {

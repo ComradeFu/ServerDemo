@@ -163,12 +163,12 @@ private:
 };
 
 //占位
-class UnknowAddress : public Address
+class UnknownAddress : public Address
 {
 public:
-    typedef std::shared_ptr<UnknowAddress> ptr;
-    UnknowAddress(int family);
-    UnknowAddress(const sockaddr& addr);
+    typedef std::shared_ptr<UnknownAddress> ptr;
+    UnknownAddress(int family);
+    UnknownAddress(const sockaddr& addr);
     const sockaddr* getAddr() const override;
     //非const版本重载
     sockaddr* getAddr() override;

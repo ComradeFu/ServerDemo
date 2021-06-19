@@ -273,7 +273,7 @@ Address::ptr Address::Create(const sockaddr* addr, socklen_t addrlen)
             result.reset(new IPv6Address(*(const sockaddr_in6*)addr));
             break;
         default:
-            result.reset(new UnknowAddress(*addr));
+            result.reset(new UnknownAddress(*addr));
             break;
     }
 
@@ -689,35 +689,35 @@ std::ostream& UnixAddress::insert(std::ostream& os) const
 }
 
 //unknow
-UnknowAddress::UnknowAddress(int family)
+UnknownAddress::UnknownAddress(int family)
 {
     memset(&m_addr, 0, sizeof(m_addr));
     m_addr.sa_family = family;
 }
 
-UnknowAddress::UnknowAddress(const sockaddr& addr)
+UnknownAddress::UnknownAddress(const sockaddr& addr)
 {
     m_addr = addr;
 }
 
-const sockaddr* UnknowAddress::getAddr() const 
+const sockaddr* UnknownAddress::getAddr() const 
 {
     return &m_addr;
 }
 
-sockaddr* UnknowAddress::getAddr() 
+sockaddr* UnknownAddress::getAddr() 
 {
     return &m_addr;
 }
 
-socklen_t UnknowAddress::getAddrLen() const 
+socklen_t UnknownAddress::getAddrLen() const 
 {
     return sizeof(m_addr);
 }
 
-std::ostream& UnknowAddress::insert(std::ostream& os) const 
+std::ostream& UnknownAddress::insert(std::ostream& os) const 
 {
-    os << "[UnknowAddress family=" << m_addr.sa_family << "]";
+    os << "[UnknownAddress family=" << m_addr.sa_family << "]";
     return os;
 }
 
