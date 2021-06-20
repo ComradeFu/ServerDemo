@@ -23,6 +23,7 @@ link_directories(/usr/local/lib64/)
 
 set(LIB_SRC 
     sylar/log.cc
+    sylar/bytearray.cc
     sylar/socket.cc
     sylar/address.cc
     sylar/scheduler.cc
@@ -112,6 +113,11 @@ add_executable(test_socket tests/test_socket.cc)
 add_dependencies(test_socket sylar)
 target_link_libraries(test_socket ${LIB_LIB})
 force_redefine_file_macro_for_sources(test_socket)
+
+add_executable(test_bytearray tests/test_bytearray.cc)
+add_dependencies(test_bytearray sylar)
+target_link_libraries(test_bytearray ${LIB_LIB})
+force_redefine_file_macro_for_sources(test_bytearray)
 
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
