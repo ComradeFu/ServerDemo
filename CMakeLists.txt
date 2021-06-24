@@ -23,6 +23,10 @@ link_directories(/usr/local/lib64/)
 
 set(LIB_SRC 
     sylar/log.cc
+    sylar/http/http.cc
+    sylar/http/http_parser.cc
+    sylar/http/http11_parser.rl.cc
+    sylar/http/httpclient_parser.rl.cc
     sylar/bytearray.cc
     sylar/socket.cc
     sylar/address.cc
@@ -118,6 +122,11 @@ add_executable(test_bytearray tests/test_bytearray.cc)
 add_dependencies(test_bytearray sylar)
 target_link_libraries(test_bytearray ${LIB_LIB})
 force_redefine_file_macro_for_sources(test_bytearray)
+
+add_executable(test_http tests/test_http.cc)
+add_dependencies(test_http sylar)
+target_link_libraries(test_http ${LIB_LIB})
+force_redefine_file_macro_for_sources(test_http)
 
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
