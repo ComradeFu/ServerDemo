@@ -128,5 +128,10 @@ add_dependencies(test_http sylar)
 target_link_libraries(test_http ${LIB_LIB})
 force_redefine_file_macro_for_sources(test_http)
 
+add_executable(test_http_parser tests/test_http_parser.cc)
+add_dependencies(test_http_parser sylar)
+target_link_libraries(test_http_parser ${LIB_LIB})
+force_redefine_file_macro_for_sources(test_http_parser)
+
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
