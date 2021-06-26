@@ -11,7 +11,9 @@
 /*
 GET / HTTP/1.1
 host: www.baidu.com
+...fileds
 
+body（上面有一个空行作为分割）
 
 */
 
@@ -287,7 +289,8 @@ public:
         return getAs(m_cookies, key, def);
     }
 
-    std::ostream& dump(std::ostream& os);
+    std::ostream& dump(std::ostream& os) const;
+    std::string toString() const;
 private:
     HttpMethod m_method;
     uint8_t m_version; //1.0 1.1 2.0, 0x10, 0x11, 0x20 够用了
@@ -343,7 +346,8 @@ public:
         return getAs(m_headers, key, def);
     }
 
-    std::ostream& dump(std::ostream& os);
+    std::ostream& dump(std::ostream& os) const;
+    std::string toString() const;
 private:
     HttpStatus m_status;
     uint8_t m_version;

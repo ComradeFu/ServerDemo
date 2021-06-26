@@ -137,11 +137,16 @@ HttpRequestParser::HttpRequestParser()
     m_parser.data = this; //c风格，回调的时候能在回调里能拿到
 }
 
+uint64_t HttpRequestParser::getContentLength()
+{
+    return m_data->getHeaderAs<uint64_t>("content-length", 0);
+}
+
 size_t HttpRequestParser::execute(char* data, size_t len)
 {
     //真正的做解析，永远从0开始，简单粗暴
     size_t offset = http_parser_execute(&m_parser, data, len, 0);
-    //没有解析完，把解析过的给 mov 调，腾出空间
+    //没有解析完，把解析过的给 mov，剩下的未解析部分留着
     memmove(data, data + offset, (len - offset));
     return offset;
 }
@@ -162,11 +167,14 @@ int HttpRequestParser::hasError()
 // ResponseParser
 void on_response_reason(void *data, const char *at, size_t length)
 {
-
+    HttpResponseParser* parser = static_cast<HttpResponseParser*>(data);
+    parser->getData()->setReason(std::string(at, length));
 }
 void on_response_status(void *data, const char *at, size_t length)
 {
-    
+    HttpResponseParser* parser = static_cast<HttpResponseParser*>(data);
+    HttpStatus status = (HttpStatus)(atoi(at)); //int 简单转换
+    parser->getData()->setStatus(status);
 }
 void on_response_chunk(void *data, const char *at, size_t length)
 {
@@ -174,7 +182,24 @@ void on_response_chunk(void *data, const char *at, size_t length)
 }
 void on_response_version(void *data, const char *at, size_t length)
 {
-    
+    HttpResponseParser* parser = static_cast<HttpResponseParser*>(data);
+    uint8_t v = 0;
+    if(strncmp(at, "HTTP/1.1", length) == 0)
+    {
+        v = 0x11;
+    }
+    else if(strncmp(at, "HTTP/1.0", length) == 0) 
+    {
+        v = 0x10;
+    }
+    else
+    {
+        SYLAR_LOG_WARN(g_logger) << "invalid http response version: "
+            << std::string(at, length);
+        parser->setError(1001);
+        return;
+    }
+    parser->getData()->setVersion(v);
 }
 void on_response_header_done(void *data, const char *at, size_t length)
 {
@@ -185,11 +210,20 @@ void on_response_last_chunk(void *data, const char *at, size_t length)
     
 }
 //field_cb
-void on_response_http_field(void  *data, const char *filed, size_t flen, const char *value, size_t vlen)
+void on_response_http_field(void  *data, const char *field, size_t flen, const char *value, size_t vlen)
 {
-
+    HttpResponseParser* parser = static_cast<HttpResponseParser*>(data);
+    if(flen == 0)
+    {
+        //key都没有
+        SYLAR_LOG_WARN(g_logger) << "invalid http response field length == 0";
+        parser->setError(1002);
+        return;
+    }
+    parser->getData()->setHeader(std::string(field, flen), std::string(value, vlen));
 }
 HttpResponseParser::HttpResponseParser()
+    :m_error(0)
 {
     m_data.reset(new sylar::http::HttpResponse);
     httpclient_parser_init(&m_parser);
@@ -200,21 +234,31 @@ HttpResponseParser::HttpResponseParser()
     m_parser.header_done = on_response_header_done;
     m_parser.last_chunk = on_response_last_chunk;
     m_parser.http_field = on_response_http_field;
+    m_parser.data = this;
+}
+
+uint64_t HttpResponseParser::getContentLength()
+{
+    return m_data->getHeaderAs<uint64_t>("content-length", 0);
 }
 
 size_t HttpResponseParser::execute(char* data, size_t len)
 {
-    return 0;
+    //真正的做解析，永远从0开始，简单粗暴
+    size_t offset = httpclient_parser_execute(&m_parser, data, len, 0);
+    //没有解析完，把解析过的给 mov，剩下的未解析部分留着
+    memmove(data, data + offset, (len - offset));
+    return offset;
 }
 
 int HttpResponseParser::isFinished()
 {   
-    return 0;
+    return httpclient_parser_finish(&m_parser);
 }
 
 int HttpResponseParser::hasError()
 {
-    return 0;
+    return m_error || httpclient_parser_has_error(&m_parser);
 }
 
 }

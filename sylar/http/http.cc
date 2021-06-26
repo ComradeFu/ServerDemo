@@ -12,9 +12,8 @@ HttpMethod StringToHttpMethod(const std::string& m)
     if(strcmp(#string, m.c_str()) == 0) \
     { \
         return HttpMethod::name; \
-    } \
-    HTTP_METHOD_MAP(XX) \
-}
+    }
+    HTTP_METHOD_MAP(XX)
 #undef XX
     return HttpMethod::INVALID_METHOD;
 }
@@ -25,9 +24,8 @@ HttpMethod CharsToHttpMethod(const char* m)
     if(strcmp(#string, m) == 0) \
     { \
         return HttpMethod::name; \
-    } \
-    HTTP_METHOD_MAP(XX) \
-}
+    }
+    HTTP_METHOD_MAP(XX)
 #undef XX
     return HttpMethod::INVALID_METHOD;
 }
@@ -173,7 +171,7 @@ bool HttpRequest::hasCookie(const std::string& key, std::string* val)
     return true;
 }
 //序列化
-std::ostream& HttpRequest::dump(std::ostream& os)
+std::ostream& HttpRequest::dump(std::ostream& os) const
 {
     //GET /uri HTTP/1.1/r/n
     //Host: www.baidu.com
@@ -214,6 +212,13 @@ std::ostream& HttpRequest::dump(std::ostream& os)
     return os;
 }
 
+std::string HttpRequest::toString() const
+{
+    std::stringstream ss;
+    dump(ss);
+    return ss.str();
+}
+
 //======================== HTTPRESPONSE ===========================
 HttpResponse::HttpResponse(uint8_t version, bool close)
             :m_status(HttpStatus::OK)
@@ -239,7 +244,7 @@ void HttpResponse::delHeader(const std::string& key)
     m_headers.erase(key);
 }
 
-std::ostream& HttpResponse::dump(std::ostream& os)
+std::ostream& HttpResponse::dump(std::ostream& os) const
 {
     {
         //HEAD
@@ -276,6 +281,13 @@ std::ostream& HttpResponse::dump(std::ostream& os)
         }
     }
     return os;
+}
+
+std::string HttpResponse::toString() const
+{
+    std::stringstream ss;
+    dump(ss);
+    return ss.str();
 }
 
 }
