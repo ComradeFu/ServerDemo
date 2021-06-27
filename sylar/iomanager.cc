@@ -393,7 +393,7 @@ void IOManager::tickle()
     SYLAR_ASSERT(rt == 1); // 1 是实际写入的长度
 }
 
-bool IOManager::stopping(uint64_t next_timeout)
+bool IOManager::stopping(uint64_t& next_timeout)
 {
     next_timeout = getNextTimer();
     //处理完所有事件
@@ -424,15 +424,11 @@ void IOManager::idle()
     while(true)
     {
         uint64_t next_timeout = 0;
-        if(stopping())
+        if(stopping(next_timeout)) 
         {
-            //为什么不用上面的 hasTimer()，是少了一把锁
-            next_timeout = getNextTimer();
-            if(next_timeout == ~0ull)
-            {
-                SYLAR_LOG_INFO(g_logger) << "name=" << getName() << " idle stopping exit";
-                break;
-            }
+            SYLAR_LOG_INFO(g_logger) << "name=" << getName()
+                                     << " idle stopping exit";
+            break;
         }
 
         //实际的长度（事件数）
@@ -445,12 +441,12 @@ void IOManager::idle()
                 next_timeout = (int)next_timeout > MAX_TIMEOUT ? MAX_TIMEOUT : next_timeout;
             }
             else
-            {
+            {   
                 next_timeout = MAX_TIMEOUT;
             }
+            // SYLAR_LOG_INFO(g_logger) << "epoll wait ! next_timeout:" << next_timeout;
             //没有事件回来，五秒之后也会唤醒，64 就是上面的一次返回处理的数量
             rt = epoll_wait(m_epfd, events, 64, (int)next_timeout);
-
             //EINTR 操作系统返回的中断，指示再去epoll一次
             if(rt < 0 && errno == EINTR)
             {

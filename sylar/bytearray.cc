@@ -615,12 +615,19 @@ void ByteArray::read(void* buf, size_t size, size_t position) const
 //set 稍微要复杂一些
 void ByteArray::setPosition(size_t v)
 {
-    if(v > m_size)
+    if(v > m_capacity)
     {
         throw std::out_of_range("set_position out of range");
     }
 
     m_position = v;
+
+    //修正size（设置到后面去，说明size也要跟着变化了）
+    if(m_position > m_size)
+    {
+        m_size = m_position;
+    }
+
     m_cur = m_root;
     while(v > m_cur->size)
     {

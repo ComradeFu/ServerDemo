@@ -181,9 +181,9 @@ retry:
         {
             //成功加入时间之后，就开始让出，等唤醒
             //没必要 READY
-            SYLAR_LOG_INFO(g_logger) << "do_io<" << hook_func_name << "> before hold";
+            // SYLAR_LOG_INFO(g_logger) << "do_io<" << hook_func_name << "> before hold";
             sylar::Fiber::YieldToHold();
-            SYLAR_LOG_INFO(g_logger) << "do_io<" << hook_func_name << "> after hold";
+            // SYLAR_LOG_INFO(g_logger) << "do_io<" << hook_func_name << "> after hold";
             //唤醒回来之后，如果timer 还在的话，cancel
             //唤醒有两种可能。一种是真的有事件过来了，另一种是上面的超时定时器超时了。
             if(timer)

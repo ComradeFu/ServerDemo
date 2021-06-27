@@ -73,7 +73,7 @@ protected:
     void contextResize(size_t size);
     //这个是特殊用来区分 stopping 的。这个 stopping 会返回下次的定时器的执行时间
     //啊~ 这个补丁好惨
-    bool stopping(uint64_t next_timeout); 
+    bool stopping(uint64_t& next_timeout); 
 private:
     int m_epfd = 0; //epoll的fd
     //用 pipline的形式，而不是经典的信号量

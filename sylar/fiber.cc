@@ -66,7 +66,7 @@ Fiber::Fiber()
 
     ++s_fiber_count;
 
-    SYLAR_LOG_DEBUG(g_logger) << "Fiber::Fiber main";
+    // SYLAR_LOG_DEBUG(g_logger) << "Fiber::Fiber main";
 }
 
 //真正的才开始开辟协程
@@ -284,7 +284,7 @@ void Fiber::MainFunc()
     auto raw_ptr = cur.get();
     cur.reset();
 
-    SYLAR_LOG_INFO(g_logger) << "Fiber main func end." << raw_ptr->getId();
+    // SYLAR_LOG_INFO(g_logger) << "Fiber main func end." << raw_ptr->getId();
 
     //回到主协程，虽然也可以只限定 uc_link 来解决。但既然已经封装了，就不用这个了
     raw_ptr->swapOut();

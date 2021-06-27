@@ -60,7 +60,7 @@ public:
     virtual socklen_t getAddrLen() const = 0;
 
     virtual std::ostream& insert(std::ostream& os) const = 0;
-    std::string toString(); //虽然真正用的时候，一般都是用基类。但为了调试，输出自己是哪个也是有必要的。
+    std::string toString() const; //虽然真正用的时候，一般都是用基类。但为了调试，输出自己是哪个也是有必要的。
 
     //可能要放在一些 set 里面，需要提供比较函数
     bool operator<(const Address& rhs) const;
@@ -177,6 +177,8 @@ public:
 private:
     sockaddr m_addr;
 };
+
+std::ostream& operator<<(std::ostream& os, const Address& addr);
 
 }
 
