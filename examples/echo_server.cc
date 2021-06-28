@@ -4,6 +4,8 @@
 #include "sylar/bytearray.h"
 #include "sylar/address.h"
 
+//可以用来调试协议
+
 static sylar::Logger::ptr g_logger = SYLAR_LOG_ROOT();
 
 class EchoServer : public sylar::TcpServer

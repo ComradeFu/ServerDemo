@@ -16,9 +16,22 @@ static sylar::ConfigVar<uint64_t>::ptr g_http_request_max_body_size =
     sylar::Config::Lookup("http.request.max_body_size", (uint64_t)(64 * 1024 * 1024), "http request max body size");
 
 //直接get value有锁的损耗，提前拿出来。这里不太需要线程安全
-static uint64_t s_http_request_buffer_size = 0;
-static uint64_t s_http_request_max_body_size = 0;
+static uint64_t s_http_request_buffer_size = 0;     //head
+static uint64_t s_http_request_max_body_size = 0;   //body
 
+uint64_t HttpRequestParser::GetHttpRequestBufferSize()
+{
+    return s_http_request_buffer_size;
+}
+
+uint64_t HttpRequestParser::GetHttpRequestMaxBodySize()
+{
+    return s_http_request_max_body_size;
+}
+
+namespace 
+{
+//不污染命名空间
 struct _RequestSizeIniter {
     _RequestSizeIniter()
     {
@@ -42,6 +55,7 @@ struct _RequestSizeIniter {
 };
 
 static _RequestSizeIniter _init;
+}
 
 //element_cb
 void on_reqeust_method(void *data, const char *at, size_t length)

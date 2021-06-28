@@ -23,10 +23,13 @@ link_directories(/usr/local/lib64/)
 
 set(LIB_SRC 
     sylar/log.cc
+    sylar/stream.cc
+    sylar/socket_stream.cc
     sylar/tcp_server.cc
     sylar/http/http.cc
     sylar/http/http_parser.cc
     sylar/http/http11_parser.rl.cc
+    sylar/http/http_session.cc
     sylar/http/httpclient_parser.rl.cc
     sylar/bytearray.cc
     sylar/socket.cc
