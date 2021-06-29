@@ -1,0 +1,51 @@
+#include "http_server.h"
+#include "sylar/log.h"
+
+namespace sylar
+{
+namespace http
+{
+static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
+
+HttpServer::HttpServer(bool keepalive, sylar::IOManager* worker ,sylar::IOManager* accept_worker)
+            :TcpServer(worker, accept_worker)
+            ,m_isKeepalive(keepalive)
+{
+
+}
+
+//重点实现HandleClient
+void HttpServer::handleClient(Socket::ptr client)
+{
+    HttpSession::ptr session(new HttpSession(client));
+    do
+    {
+        auto req = session->recvRequest();
+        if(!req)
+        {
+            //恶意攻击的比较多的话，也不至于是错误先
+            SYLAR_LOG_WARN(g_logger) << "recv http request fail, errno="
+                    << errno << " errorstr=" << strerror(errno)
+                    << " client:" << client;
+            break;
+        }
+
+        //就算请求的是 keep alive，服务器不支持，也不行
+        HttpResponse::ptr rsp(new HttpResponse(req->getVersion(), req->isClose() || !m_isKeepalive));
+        rsp->setBody("hello !!!!");
+
+        SYLAR_LOG_INFO(g_logger) << "request:" << std::endl
+            << * req;
+        SYLAR_LOG_INFO(g_logger) << "response:" << std::endl
+            << *rsp;
+
+        session->sendResponse(rsp);
+
+    } while(m_isKeepalive);
+
+    session->close();
+}
+
+}
+
+}

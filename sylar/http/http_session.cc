@@ -16,6 +16,7 @@ HttpRequest::ptr HttpSession::recvRequest()
     HttpRequestParser::ptr parser(new HttpRequestParser);
     //最大的buffer
     uint64_t buff_size = HttpRequestParser::GetHttpRequestBufferSize();
+    // uint64_t buff_size = 100;
     //智能指针智能看错一个对象，所以要指定数组的析构方法
     std::shared_ptr<char> buffer(new char[buff_size],
         [](char* ptr){

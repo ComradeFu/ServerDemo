@@ -25,7 +25,7 @@ bool SocketStream::isConnected() const
 
 int SocketStream::read(void* buffer, size_t length)
 {
-    if(isConnected())
+    if(!isConnected())
     {
         return -1;
     }
@@ -34,7 +34,7 @@ int SocketStream::read(void* buffer, size_t length)
 
 int SocketStream::read(ByteArray::ptr ba, size_t length)
 {
-    if(isConnected())
+    if(!isConnected())
     {
         return -1;
     }
@@ -52,7 +52,7 @@ int SocketStream::read(ByteArray::ptr ba, size_t length)
 
 int SocketStream::write(const void* buffer, size_t length)
 {
-    if(isConnected())
+    if(!isConnected())
     {
         return -1;
     }
@@ -61,7 +61,7 @@ int SocketStream::write(const void* buffer, size_t length)
 
 int SocketStream::write(ByteArray::ptr ba, size_t length)
 {
-    if(isConnected())
+    if(!isConnected())
     {
         return -1;
     }

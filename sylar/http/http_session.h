@@ -1,7 +1,7 @@
 #ifndef __SYLAR_HTTP_SESSION_H__
 #define __SYLAR_HTTP_SESSION_H__
 
-// server.accept 就是 session
+// server.accept 就是 session，需要配合 http_server(继承自tcp server)
 // client.connect 就是 connection
 
 #include "sylar/socket_stream.h"
