@@ -26,7 +26,7 @@ public:
     //状态枚举，READY 会马上schedule 自己。HOLD并不会，而是等待自己再决定什么时候唤醒（比如定时器）
     enum State
     {
-        INIT,
+        INIT = 0,
         HOLD,
         EXEC,
         TERM,

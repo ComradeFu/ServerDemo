@@ -44,7 +44,7 @@ void test_response()
 {
     sylar::http::HttpResponseParser parser;
     std::string tmp = test_response_data;
-    size_t s = parser.execute(&tmp[0], tmp.size());
+    size_t s = parser.execute(&tmp[0], tmp.size(), false);
 
     SYLAR_LOG_ERROR(g_logger) << "execute rt=" << s
         << " has_error=" << parser.hasError()

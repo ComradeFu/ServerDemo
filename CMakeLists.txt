@@ -30,7 +30,10 @@ set(LIB_SRC
     sylar/http/http_parser.cc
     sylar/http/http11_parser.rl.cc
     sylar/http/http_session.cc
+    sylar/http/http_connection.cc
     sylar/http/httpclient_parser.rl.cc
+    sylar/http/http_server.cc
+    sylar/http/servlet.cc
     sylar/bytearray.cc
     sylar/socket.cc
     sylar/address.cc
@@ -141,6 +144,16 @@ add_executable(test_tcp_server tests/test_tcp_server.cc)
 add_dependencies(test_tcp_server sylar)
 target_link_libraries(test_tcp_server ${LIB_LIB})
 force_redefine_file_macro_for_sources(test_tcp_server)
+
+add_executable(test_http_server tests/test_http_server.cc)
+add_dependencies(test_http_server sylar)
+target_link_libraries(test_http_server ${LIB_LIB})
+force_redefine_file_macro_for_sources(test_http_server)
+
+add_executable(test_http_connection tests/test_http_connection.cc)
+add_dependencies(test_http_connection sylar)
+target_link_libraries(test_http_connection ${LIB_LIB})
+force_redefine_file_macro_for_sources(test_http_connection)
 
 add_executable(echo_server examples/echo_server.cc)
 add_dependencies(echo_server sylar)

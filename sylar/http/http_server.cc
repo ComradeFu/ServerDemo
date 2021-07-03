@@ -11,7 +11,7 @@ HttpServer::HttpServer(bool keepalive, sylar::IOManager* worker ,sylar::IOManage
             :TcpServer(worker, accept_worker)
             ,m_isKeepalive(keepalive)
 {
-
+    m_dispatch.reset(new ServletDispatch);
 }
 
 //重点实现HandleClient
@@ -32,13 +32,18 @@ void HttpServer::handleClient(Socket::ptr client)
 
         //就算请求的是 keep alive，服务器不支持，也不行
         HttpResponse::ptr rsp(new HttpResponse(req->getVersion(), req->isClose() || !m_isKeepalive));
-        rsp->setBody("hello !!!!");
+        m_dispatch->handle(req, rsp, session);
 
-        SYLAR_LOG_INFO(g_logger) << "request:" << std::endl
-            << * req;
-        SYLAR_LOG_INFO(g_logger) << "response:" << std::endl
-            << *rsp;
+        // rsp->setBody("hello !!!!");
 
+        // SYLAR_LOG_INFO(g_logger) << "request:" << std::endl
+        //     << * req;
+        // SYLAR_LOG_INFO(g_logger) << "response:" << std::endl
+        //     << *rsp;
+
+        //不在 servlet 里发送，因为可能 servlet 会有多层的处理
+        //处理好之后再统一发送
+        //传入 session 只是用来做上下文的判断，比如cookie，或者session（http意义上的）
         session->sendResponse(rsp);
 
     } while(m_isKeepalive);

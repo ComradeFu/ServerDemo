@@ -107,8 +107,11 @@ static ssize_t do_io(int fd, OriginFun fun, const char* hook_func_name,
     }
 
     sylar::FdCtx::ptr ctx = sylar::FdMgr::GetInstance()->get(fd);
+    SYLAR_LOG_INFO(g_logger) << "do io before, " << hook_func_name << ",fd=" << fd;
     if(!ctx)
     {
+        SYLAR_LOG_INFO(g_logger) << "ds!!!!!" << hook_func_name << ",fd=" << fd;
+
         //如果不存在，就当作不是 socket，也同样得按照原来的io操作来做
         //因为我们只hook住了 socket
         return fun(fd, std::forward<Args>(args)...);
@@ -124,6 +127,7 @@ static ssize_t do_io(int fd, OriginFun fun, const char* hook_func_name,
     //getUserNonblock，用户设置了不阻塞
     if(!ctx->isSocket() || ctx->getUserNonblock())
     {
+        SYLAR_LOG_INFO(g_logger) << "111222ds!!!!!" << hook_func_name << ",fd=" << fd;
         return fun(fd, std::forward<Args>(args)...);
     }
 
@@ -181,9 +185,9 @@ retry:
         {
             //成功加入时间之后，就开始让出，等唤醒
             //没必要 READY
-            // SYLAR_LOG_INFO(g_logger) << "do_io<" << hook_func_name << "> before hold";
+            SYLAR_LOG_INFO(g_logger) << "do_io<" << hook_func_name << "> before hold";
             sylar::Fiber::YieldToHold();
-            // SYLAR_LOG_INFO(g_logger) << "do_io<" << hook_func_name << "> after hold";
+            SYLAR_LOG_INFO(g_logger) << "do_io<" << hook_func_name << "> after hold";
             //唤醒回来之后，如果timer 还在的话，cancel
             //唤醒有两种可能。一种是真的有事件过来了，另一种是上面的超时定时器超时了。
             if(timer)
@@ -204,7 +208,7 @@ retry:
             goto retry;
         }
     }
-
+    SYLAR_LOG_INFO(g_logger) << "read n=" << n;
     //当读到数据后，返回N
     return n;
 }
@@ -314,6 +318,7 @@ int socket(int domain, int type, int protocol)
 // 第七步：如果连接成功，正常情况下epoll触发EPOLLOUT事件，不会触发EPOLLIN事件。但有一种情况，如果connect成功之后，服务端马上发送数据，此时客户端也会立刻得到EPOLLIN事件。如果连接失败，我们会得到EPOLLIN、EPOLLOUT、EPOLLERR和EPOLLHUP事件。
 int connect_with_timeout(int fd, const struct sockaddr* addr, socklen_t addrlen, uint64_t timeout_ms)
 {
+    SYLAR_LOG_INFO(g_logger) << "connect with timeout, fd=" << fd;
     if(!sylar::t_hook_enable)
     {
         return connect_f(fd, addr, addrlen);

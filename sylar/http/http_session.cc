@@ -31,6 +31,7 @@ HttpRequest::ptr HttpSession::recvRequest()
         int len = read(data + offset, buff_size - offset);
         if(len <= 0)
         {
+            close();
             return nullptr;
         }
         len += offset;
@@ -39,11 +40,13 @@ HttpRequest::ptr HttpSession::recvRequest()
         int nparser = parser->execute(data, len);
         if(parser->hasError())
         {
+            close();
             return nullptr;
         }
         offset = len - nparser;
         if(offset == (int)buff_size)
         {
+            close();
             //缓冲区满了，还是没有解析完（状态机结束）。也是有问题的
             return nullptr;
         }
@@ -59,24 +62,31 @@ HttpRequest::ptr HttpSession::recvRequest()
     {
         std::string body;
         //保留大小
-        body.reserve(length);
-        
+        //reserve 在readfixsize 时就不行了
+        // body.reserve(length);
+        body.resize(length);
+        int len = 0;
         if(length >= offset)
         {
             //放进去解析剩下的 body
-            body.append(data, offset);
+            // body.append(data, offset);
+            memcpy(&body[0], data, offset);
+            len = offset;
         }
         else
         {
-            body.append(data, length);
+            // body.append(data, length);
+            memcpy(&body[0], data, length);
+            len = length;
         }
 
         length -= offset;
         if(length > 0)
         {
             //没读完指定长度，继续读
-            if(readFixSize(&body[body.size()], length) <= 0)
+            if(readFixSize(&body[len], length) <= 0)
             {
+                close();
                 return nullptr;
             }
         }

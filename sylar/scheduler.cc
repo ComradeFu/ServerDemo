@@ -302,6 +302,7 @@ void Scheduler::run()
             ft.reset();
 
             // ++m_activeThreadCount;
+            SYLAR_LOG_INFO(g_logger) << "Fiber swaping , fiber id=" << cb_fiber->getId();
             cb_fiber->swapIn();
             --m_activeThreadCount;
 
@@ -321,6 +322,8 @@ void Scheduler::run()
             }
             else
             {
+                SYLAR_LOG_DEBUG(g_logger) << "Schduler cb fiber FINISH! else !!!  id=" << cb_fiber->getId() << ", state:" << cb_fiber->m_state ;
+
                 //其他的状态没处理的话，统一为 HOLD
                 cb_fiber->m_state = Fiber::HOLD;
                 cb_fiber.reset();
