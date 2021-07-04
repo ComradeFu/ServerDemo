@@ -59,6 +59,7 @@ Fiber::Fiber()
     //这个函数执行，肯定是 main
     SetThis(this);
 
+    //这里注释是因为，用了swapcontext，会自动保存好。现在get初始化没什么意义，会给要call 的fiber的ctx给覆盖
     // if(getcontext(&m_ctx))
     // {
     //     SYLAR_ASSERT2(false, "getcontext");
@@ -127,7 +128,7 @@ Fiber::~Fiber()
         }
     }
 
-    SYLAR_LOG_INFO(g_logger) << "fiber destory " << getId();
+    SYLAR_LOG_INFO(g_logger) << "fiber destory " << m_id;
 }
 
 void Fiber::reset(std::function<void()> cb)

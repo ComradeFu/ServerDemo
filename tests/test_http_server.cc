@@ -35,7 +35,7 @@ void run()
 
 int main(int argc, char** argv)
 {
-    sylar::IOManager iom(2);
+    sylar::IOManager iom(1);
     iom.schedule(run);
     return 0;
 }

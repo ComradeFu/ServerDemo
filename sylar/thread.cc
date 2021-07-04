@@ -1,6 +1,7 @@
 #include "thread.h"
 #include "log.h"
 #include "util.h"
+#include "iostream"
 
 namespace sylar {
 
@@ -56,10 +57,15 @@ const std::string& Thread::GetName()
 
 void Thread::SetName(const std::string& name)
 {
-    if(name.empty()) 
-    {
-        return;
-    }
+    //注释原因：记一次很奇怪的bug，如果一直都是返回 "UNKNOW"，那么在最后的 fiber = 0销毁的时候
+    //会signal fault，猜测是因为注销的时候，const 区已经销毁了
+    //导致 getName 拿不到 "UNKNOW" 区，从而失败了
+    //当然问题没有解决，如果set 的名字还是一个外面传入的const区，也一样。。最后 fiber = 0 的destroy 日志打不出来，core了
+    //诡异的是，如果 fiber = 0 的构造函数里，打印过这个 "UNKNOW"，就可以了。感觉是系统引用优化有关。。
+    // if(name.empty()) 
+    // {
+    //     return;
+    // }
 
     if(t_thread)
     {
@@ -91,6 +97,7 @@ Thread::Thread(std::function<void()>cb, const std::string& name):m_cb(cb), m_nam
 
 Thread::~Thread()
 {
+    SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "Thread destroy :" << m_id;
     if(m_thread)
     {
         pthread_detach(m_thread); //或者 join，两种方法
