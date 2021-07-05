@@ -28,10 +28,8 @@ set(LIB_SRC
     sylar/tcp_server.cc
     sylar/http/http.cc
     sylar/http/http_parser.cc
-    sylar/http/http11_parser.rl.cc
     sylar/http/http_session.cc
     sylar/http/http_connection.cc
-    sylar/http/httpclient_parser.rl.cc
     sylar/http/http_server.cc
     sylar/http/servlet.cc
     sylar/bytearray.cc
@@ -47,6 +45,11 @@ set(LIB_SRC
     sylar/fd_manager.cc
     sylar/hook.cc
     )
+
+# ragel 的生成（需要机器 yum install ragel）
+ragelmaker(sylar/http/http11_parser.rl LIB_SRC ${CMAKE_CURRENT_SOURCE_DIR}/sylar/http)
+ragelmaker(sylar/http/httpclient_parser.rl LIB_SRC ${CMAKE_CURRENT_SOURCE_DIR}/sylar/http)
+ragelmaker(sylar/uri.rl LIB_SRC ${CMAKE_CURRENT_SOURCE_DIR}/sylar)
 
 add_library(sylar SHARED ${LIB_SRC})
 
@@ -154,6 +157,11 @@ add_executable(test_http_connection tests/test_http_connection.cc)
 add_dependencies(test_http_connection sylar)
 target_link_libraries(test_http_connection ${LIB_LIB})
 force_redefine_file_macro_for_sources(test_http_connection)
+
+add_executable(test_uri tests/test_uri.cc)
+add_dependencies(test_uri sylar)
+target_link_libraries(test_uri ${LIB_LIB})
+force_redefine_file_macro_for_sources(test_uri)
 
 add_executable(echo_server examples/echo_server.cc)
 add_dependencies(echo_server sylar)

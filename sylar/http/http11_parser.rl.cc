@@ -1,5 +1,5 @@
 
-#line 1 "http11_parser.rl"
+#line 1 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 /**
 *
 * Copyright (c) 2010, Zed A. Shaw and Mongrel2 Project Contributors.
@@ -49,7 +49,7 @@
 /** Machine **/
 
 
-#line 257 "http11_parser.rl"
+#line 257 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 
 
 /** Data **/
@@ -120,7 +120,7 @@ static const char _http_parser_nfa_pop_trans[] = {
 };
 
 
-#line 261 "http11_parser.rl"
+#line 261 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 
 
 int http_parser_init(http_parser *parser) {
@@ -130,7 +130,7 @@ int http_parser_init(http_parser *parser) {
 		cs = (int)http_parser_start;
 	}
 	
-	#line 265 "http11_parser.rl"
+	#line 265 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 	
 	parser->cs = cs;
 	parser->body_start = 0;
@@ -898,7 +898,7 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		goto _out;
 		ctr0:
 		{
-			#line 53 "http11_parser.rl"
+			#line 53 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			MARK(mark, p); }
 		
 		goto st2;
@@ -922,7 +922,7 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		}
 		ctr4:
 		{
-			#line 69 "http11_parser.rl"
+			#line 69 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			if(parser->request_method != NULL) 
 			parser->request_method(parser->data, PTR_TO(mark), LEN(mark, p));
@@ -1012,16 +1012,16 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		}
 		ctr6:
 		{
-			#line 53 "http11_parser.rl"
+			#line 53 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			MARK(mark, p); }
 		{
-			#line 95 "http11_parser.rl"
+			#line 95 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			if(parser->request_path != NULL)
 			parser->request_path(parser->data, PTR_TO(mark), LEN(mark,p));
 		}
 		{
-			#line 74 "http11_parser.rl"
+			#line 74 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			if(parser->request_uri != NULL)
 			parser->request_uri(parser->data, PTR_TO(mark), LEN(mark, p));
@@ -1030,13 +1030,13 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		goto st4;
 		ctr39:
 		{
-			#line 95 "http11_parser.rl"
+			#line 95 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			if(parser->request_path != NULL)
 			parser->request_path(parser->data, PTR_TO(mark), LEN(mark,p));
 		}
 		{
-			#line 74 "http11_parser.rl"
+			#line 74 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			if(parser->request_uri != NULL)
 			parser->request_uri(parser->data, PTR_TO(mark), LEN(mark, p));
@@ -1045,10 +1045,10 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		goto st4;
 		ctr47:
 		{
-			#line 53 "http11_parser.rl"
+			#line 53 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			MARK(mark, p); }
 		{
-			#line 79 "http11_parser.rl"
+			#line 79 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			if(parser->fragment != NULL)
 			parser->fragment(parser->data, PTR_TO(mark), LEN(mark, p));
@@ -1057,7 +1057,7 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		goto st4;
 		ctr51:
 		{
-			#line 79 "http11_parser.rl"
+			#line 79 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			if(parser->fragment != NULL)
 			parser->fragment(parser->data, PTR_TO(mark), LEN(mark, p));
@@ -1066,16 +1066,16 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		goto st4;
 		ctr60:
 		{
-			#line 84 "http11_parser.rl"
+			#line 84 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			MARK(query_start, p); }
 		{
-			#line 85 "http11_parser.rl"
+			#line 85 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			if(parser->query_string != NULL)
 			parser->query_string(parser->data, PTR_TO(query_start), LEN(query_start, p));
 		}
 		{
-			#line 74 "http11_parser.rl"
+			#line 74 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			if(parser->request_uri != NULL)
 			parser->request_uri(parser->data, PTR_TO(mark), LEN(mark, p));
@@ -1084,13 +1084,13 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		goto st4;
 		ctr65:
 		{
-			#line 85 "http11_parser.rl"
+			#line 85 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			if(parser->query_string != NULL)
 			parser->query_string(parser->data, PTR_TO(query_start), LEN(query_start, p));
 		}
 		{
-			#line 74 "http11_parser.rl"
+			#line 74 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			if(parser->request_uri != NULL)
 			parser->request_uri(parser->data, PTR_TO(mark), LEN(mark, p));
@@ -1110,7 +1110,7 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		}
 		ctr15:
 		{
-			#line 53 "http11_parser.rl"
+			#line 53 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			MARK(mark, p); }
 		
 		goto st5;
@@ -1209,7 +1209,7 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		}
 		ctr23:
 		{
-			#line 90 "http11_parser.rl"
+			#line 90 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			if(parser->http_version != NULL)
 			parser->http_version(parser->data, PTR_TO(mark), LEN(mark, p));
@@ -1218,10 +1218,10 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		goto st13;
 		ctr32:
 		{
-			#line 61 "http11_parser.rl"
+			#line 61 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			MARK(mark, p); }
 		{
-			#line 63 "http11_parser.rl"
+			#line 63 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			if(parser->http_field != NULL) {
 				parser->http_field(parser->data, PTR_TO(field_start), parser->field_len, PTR_TO(mark), LEN(mark, p));
@@ -1231,7 +1231,7 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		goto st13;
 		ctr35:
 		{
-			#line 63 "http11_parser.rl"
+			#line 63 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			if(parser->http_field != NULL) {
 				parser->http_field(parser->data, PTR_TO(field_start), parser->field_len, PTR_TO(mark), LEN(mark, p));
@@ -1297,7 +1297,7 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		}
 		ctr25:
 		{
-			#line 56 "http11_parser.rl"
+			#line 56 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			MARK(field_start, p); }
 		
 		goto st14;
@@ -1356,7 +1356,7 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		}
 		ctr29:
 		{
-			#line 57 "http11_parser.rl"
+			#line 57 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			parser->field_len = LEN(field_start, p);
 		}
@@ -1364,7 +1364,7 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		goto st15;
 		ctr31:
 		{
-			#line 61 "http11_parser.rl"
+			#line 61 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			MARK(mark, p); }
 		
 		goto st15;
@@ -1398,7 +1398,7 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		}
 		ctr30:
 		{
-			#line 61 "http11_parser.rl"
+			#line 61 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			MARK(mark, p); }
 		
 		goto st16;
@@ -1426,7 +1426,7 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		}
 		ctr24:
 		{
-			#line 90 "http11_parser.rl"
+			#line 90 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			if(parser->http_version != NULL)
 			parser->http_version(parser->data, PTR_TO(mark), LEN(mark, p));
@@ -1435,10 +1435,10 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		goto st17;
 		ctr33:
 		{
-			#line 61 "http11_parser.rl"
+			#line 61 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			MARK(mark, p); }
 		{
-			#line 63 "http11_parser.rl"
+			#line 63 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			if(parser->http_field != NULL) {
 				parser->http_field(parser->data, PTR_TO(field_start), parser->field_len, PTR_TO(mark), LEN(mark, p));
@@ -1448,7 +1448,7 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		goto st17;
 		ctr36:
 		{
-			#line 63 "http11_parser.rl"
+			#line 63 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			if(parser->http_field != NULL) {
 				parser->http_field(parser->data, PTR_TO(field_start), parser->field_len, PTR_TO(mark), LEN(mark, p));
@@ -1469,10 +1469,10 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		}
 		ctr26:
 		{
-			#line 56 "http11_parser.rl"
+			#line 56 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			MARK(field_start, p); }
 		{
-			#line 100 "http11_parser.rl"
+			#line 100 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			if(parser->xml_sent || parser->json_sent) {
 				parser->body_start = PTR_TO(mark) - buffer;
@@ -1491,7 +1491,7 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		goto st348;
 		ctr38:
 		{
-			#line 100 "http11_parser.rl"
+			#line 100 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			if(parser->xml_sent || parser->json_sent) {
 				parser->body_start = PTR_TO(mark) - buffer;
@@ -1563,7 +1563,7 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		}
 		ctr27:
 		{
-			#line 56 "http11_parser.rl"
+			#line 56 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			MARK(field_start, p); }
 		
 		goto st18;
@@ -1625,13 +1625,13 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		}
 		ctr13:
 		{
-			#line 53 "http11_parser.rl"
+			#line 53 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			MARK(mark, p); }
 		
 		goto st19;
 		ctr7:
 		{
-			#line 53 "http11_parser.rl"
+			#line 53 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			MARK(mark, p); }
 		
 		goto st19;
@@ -1715,16 +1715,16 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		}
 		ctr8:
 		{
-			#line 53 "http11_parser.rl"
+			#line 53 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			MARK(mark, p); }
 		{
-			#line 95 "http11_parser.rl"
+			#line 95 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			if(parser->request_path != NULL)
 			parser->request_path(parser->data, PTR_TO(mark), LEN(mark,p));
 		}
 		{
-			#line 74 "http11_parser.rl"
+			#line 74 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			if(parser->request_uri != NULL)
 			parser->request_uri(parser->data, PTR_TO(mark), LEN(mark, p));
@@ -1733,13 +1733,13 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		goto st20;
 		ctr41:
 		{
-			#line 95 "http11_parser.rl"
+			#line 95 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			if(parser->request_path != NULL)
 			parser->request_path(parser->data, PTR_TO(mark), LEN(mark,p));
 		}
 		{
-			#line 74 "http11_parser.rl"
+			#line 74 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			if(parser->request_uri != NULL)
 			parser->request_uri(parser->data, PTR_TO(mark), LEN(mark, p));
@@ -1748,16 +1748,16 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		goto st20;
 		ctr61:
 		{
-			#line 84 "http11_parser.rl"
+			#line 84 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			MARK(query_start, p); }
 		{
-			#line 85 "http11_parser.rl"
+			#line 85 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			if(parser->query_string != NULL)
 			parser->query_string(parser->data, PTR_TO(query_start), LEN(query_start, p));
 		}
 		{
-			#line 74 "http11_parser.rl"
+			#line 74 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			if(parser->request_uri != NULL)
 			parser->request_uri(parser->data, PTR_TO(mark), LEN(mark, p));
@@ -1766,13 +1766,13 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		goto st20;
 		ctr66:
 		{
-			#line 85 "http11_parser.rl"
+			#line 85 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			if(parser->query_string != NULL)
 			parser->query_string(parser->data, PTR_TO(query_start), LEN(query_start, p));
 		}
 		{
-			#line 74 "http11_parser.rl"
+			#line 74 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			if(parser->request_uri != NULL)
 			parser->request_uri(parser->data, PTR_TO(mark), LEN(mark, p));
@@ -1842,13 +1842,13 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		}
 		ctr49:
 		{
-			#line 53 "http11_parser.rl"
+			#line 53 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			MARK(mark, p); }
 		
 		goto st21;
 		ctr46:
 		{
-			#line 53 "http11_parser.rl"
+			#line 53 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			MARK(mark, p); }
 		
 		goto st21;
@@ -1915,7 +1915,7 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		}
 		ctr48:
 		{
-			#line 53 "http11_parser.rl"
+			#line 53 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			MARK(mark, p); }
 		
 		goto st22;
@@ -1959,7 +1959,7 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		}
 		ctr9:
 		{
-			#line 53 "http11_parser.rl"
+			#line 53 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			MARK(mark, p); }
 		
 		goto st24;
@@ -2003,13 +2003,13 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		}
 		ctr217:
 		{
-			#line 53 "http11_parser.rl"
+			#line 53 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			MARK(mark, p); }
 		
 		goto st26;
 		ctr215:
 		{
-			#line 53 "http11_parser.rl"
+			#line 53 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			MARK(mark, p); }
 		
 		goto st26;
@@ -2081,7 +2081,7 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		}
 		ctr216:
 		{
-			#line 53 "http11_parser.rl"
+			#line 53 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			MARK(mark, p); }
 		
 		goto st27;
@@ -2125,10 +2125,10 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		}
 		ctr11:
 		{
-			#line 53 "http11_parser.rl"
+			#line 53 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			MARK(mark, p); }
 		{
-			#line 95 "http11_parser.rl"
+			#line 95 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			if(parser->request_path != NULL)
 			parser->request_path(parser->data, PTR_TO(mark), LEN(mark,p));
@@ -2137,7 +2137,7 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		goto st29;
 		ctr44:
 		{
-			#line 95 "http11_parser.rl"
+			#line 95 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			if(parser->request_path != NULL)
 			parser->request_path(parser->data, PTR_TO(mark), LEN(mark,p));
@@ -2209,13 +2209,13 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		}
 		ctr63:
 		{
-			#line 84 "http11_parser.rl"
+			#line 84 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			MARK(query_start, p); }
 		
 		goto st30;
 		ctr59:
 		{
-			#line 84 "http11_parser.rl"
+			#line 84 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			MARK(query_start, p); }
 		
 		goto st30;
@@ -2284,7 +2284,7 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		}
 		ctr62:
 		{
-			#line 84 "http11_parser.rl"
+			#line 84 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			MARK(query_start, p); }
 		
 		goto st31;
@@ -2328,7 +2328,7 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		}
 		ctr10:
 		{
-			#line 53 "http11_parser.rl"
+			#line 53 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			MARK(mark, p); }
 		
 		goto st33;
@@ -5831,7 +5831,7 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		}
 		ctr12:
 		{
-			#line 53 "http11_parser.rl"
+			#line 53 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			MARK(mark, p); }
 		
 		goto st173;
@@ -6332,7 +6332,7 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		}
 		ctr2:
 		{
-			#line 53 "http11_parser.rl"
+			#line 53 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			MARK(mark, p); }
 		
 		goto st194;
@@ -6395,7 +6395,7 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		}
 		ctr237:
 		{
-			#line 95 "http11_parser.rl"
+			#line 95 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			if(parser->request_path != NULL)
 			parser->request_path(parser->data, PTR_TO(mark), LEN(mark,p));
@@ -6431,12 +6431,12 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		}
 		ctr240:
 		{
-			#line 115 "http11_parser.rl"
+			#line 115 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			parser->xml_sent = 1;
 		}
 		{
-			#line 100 "http11_parser.rl"
+			#line 100 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			if(parser->xml_sent || parser->json_sent) {
 				parser->body_start = PTR_TO(mark) - buffer;
@@ -6455,12 +6455,12 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		goto st349;
 		ctr249:
 		{
-			#line 119 "http11_parser.rl"
+			#line 119 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			parser->json_sent = 1;
 		}
 		{
-			#line 100 "http11_parser.rl"
+			#line 100 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			if(parser->xml_sent || parser->json_sent) {
 				parser->body_start = PTR_TO(mark) - buffer;
@@ -6487,7 +6487,7 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		}
 		ctr3:
 		{
-			#line 53 "http11_parser.rl"
+			#line 53 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			MARK(mark, p); }
 		
 		goto st198;
@@ -6565,7 +6565,7 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		}
 		ctr241:
 		{
-			#line 95 "http11_parser.rl"
+			#line 95 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			
 			if(parser->request_path != NULL)
 			parser->request_path(parser->data, PTR_TO(mark), LEN(mark,p));
@@ -6585,7 +6585,7 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		}
 		ctr246:
 		{
-			#line 53 "http11_parser.rl"
+			#line 53 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 			MARK(mark, p); }
 		
 		goto st200;
@@ -10631,7 +10631,7 @@ size_t http_parser_execute(http_parser *parser, const char *buffer, size_t len, 
 		_out: {}
 	}
 	
-	#line 299 "http11_parser.rl"
+	#line 299 "/data/workspace/ServerDemo/sylar/http/http11_parser.rl"
 	
 	
 	assert(p <= pe && "Buffer overflow after parsing.");

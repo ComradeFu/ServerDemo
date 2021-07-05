@@ -1,5 +1,5 @@
 
-#line 1 "httpclient_parser.rl"
+#line 1 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 /**
 *
 * Copyright (c) 2010, Zed A. Shaw and Mongrel2 Project Contributors.
@@ -51,7 +51,7 @@
 
 /** machine **/
 
-#line 157 "httpclient_parser.rl"
+#line 157 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 
 
 /** Data **/
@@ -94,7 +94,7 @@ static const char _httpclient_parser_nfa_pop_trans[] = {
 };
 
 
-#line 161 "httpclient_parser.rl"
+#line 161 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 
 
 int httpclient_parser_init(httpclient_parser *parser)  {
@@ -105,7 +105,7 @@ int httpclient_parser_init(httpclient_parser *parser)  {
 		cs = (int)httpclient_parser_start;
 	}
 	
-	#line 166 "httpclient_parser.rl"
+	#line 166 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 	
 	
 	parser->cs = cs;
@@ -423,7 +423,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		goto _out;
 		ctr0:
 		{
-			#line 54 "httpclient_parser.rl"
+			#line 54 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(mark, p); }
 		
 		goto st2;
@@ -459,7 +459,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr3:
 		{
-			#line 95 "httpclient_parser.rl"
+			#line 95 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			parser->chunked = 1;
 			parser->content_len = strtol(PTR_TO(mark), NULL, 16);
@@ -472,7 +472,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 			} // else skip it
 		}
 		{
-			#line 111 "httpclient_parser.rl"
+			#line 111 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			parser->body_start = p - buffer + 1; 
 			if(parser->header_done != NULL)
@@ -483,7 +483,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		goto st120;
 		ctr7:
 		{
-			#line 111 "httpclient_parser.rl"
+			#line 111 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			parser->body_start = p - buffer + 1; 
 			if(parser->header_done != NULL)
@@ -494,22 +494,22 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		goto st120;
 		ctr9:
 		{
-			#line 58 "httpclient_parser.rl"
+			#line 58 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			parser->field_len = LEN(field_start, p);
 		}
 		{
-			#line 62 "httpclient_parser.rl"
+			#line 62 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(mark, p); }
 		{
-			#line 72 "httpclient_parser.rl"
+			#line 72 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			if(parser->http_field != NULL) {
 				parser->http_field(parser->data, PTR_TO(field_start), parser->field_len, PTR_TO(mark), LEN(mark, p));
 			}
 		}
 		{
-			#line 111 "httpclient_parser.rl"
+			#line 111 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			parser->body_start = p - buffer + 1; 
 			if(parser->header_done != NULL)
@@ -520,14 +520,14 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		goto st120;
 		ctr15:
 		{
-			#line 72 "httpclient_parser.rl"
+			#line 72 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			if(parser->http_field != NULL) {
 				parser->http_field(parser->data, PTR_TO(field_start), parser->field_len, PTR_TO(mark), LEN(mark, p));
 			}
 		}
 		{
-			#line 111 "httpclient_parser.rl"
+			#line 111 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			parser->body_start = p - buffer + 1; 
 			if(parser->header_done != NULL)
@@ -538,12 +538,12 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		goto st120;
 		ctr74:
 		{
-			#line 68 "httpclient_parser.rl"
+			#line 68 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			parser->close = 1;
 		}
 		{
-			#line 111 "httpclient_parser.rl"
+			#line 111 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			parser->body_start = p - buffer + 1; 
 			if(parser->header_done != NULL)
@@ -562,7 +562,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr4:
 		{
-			#line 95 "httpclient_parser.rl"
+			#line 95 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			parser->chunked = 1;
 			parser->content_len = strtol(PTR_TO(mark), NULL, 16);
@@ -578,15 +578,15 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		goto st3;
 		ctr10:
 		{
-			#line 58 "httpclient_parser.rl"
+			#line 58 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			parser->field_len = LEN(field_start, p);
 		}
 		{
-			#line 62 "httpclient_parser.rl"
+			#line 62 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(mark, p); }
 		{
-			#line 72 "httpclient_parser.rl"
+			#line 72 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			if(parser->http_field != NULL) {
 				parser->http_field(parser->data, PTR_TO(field_start), parser->field_len, PTR_TO(mark), LEN(mark, p));
@@ -596,7 +596,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		goto st3;
 		ctr16:
 		{
-			#line 72 "httpclient_parser.rl"
+			#line 72 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			if(parser->http_field != NULL) {
 				parser->http_field(parser->data, PTR_TO(field_start), parser->field_len, PTR_TO(mark), LEN(mark, p));
@@ -606,7 +606,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		goto st3;
 		ctr75:
 		{
-			#line 68 "httpclient_parser.rl"
+			#line 68 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			parser->close = 1;
 		}
@@ -625,7 +625,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr6:
 		{
-			#line 95 "httpclient_parser.rl"
+			#line 95 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			parser->chunked = 1;
 			parser->content_len = strtol(PTR_TO(mark), NULL, 16);
@@ -641,15 +641,15 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		goto st4;
 		ctr12:
 		{
-			#line 58 "httpclient_parser.rl"
+			#line 58 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			parser->field_len = LEN(field_start, p);
 		}
 		{
-			#line 62 "httpclient_parser.rl"
+			#line 62 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(mark, p); }
 		{
-			#line 72 "httpclient_parser.rl"
+			#line 72 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			if(parser->http_field != NULL) {
 				parser->http_field(parser->data, PTR_TO(field_start), parser->field_len, PTR_TO(mark), LEN(mark, p));
@@ -659,7 +659,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		goto st4;
 		ctr18:
 		{
-			#line 72 "httpclient_parser.rl"
+			#line 72 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			if(parser->http_field != NULL) {
 				parser->http_field(parser->data, PTR_TO(field_start), parser->field_len, PTR_TO(mark), LEN(mark, p));
@@ -711,7 +711,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr8:
 		{
-			#line 56 "httpclient_parser.rl"
+			#line 56 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(field_start, p); }
 		
 		goto st5;
@@ -771,12 +771,12 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr13:
 		{
-			#line 58 "httpclient_parser.rl"
+			#line 58 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			parser->field_len = LEN(field_start, p);
 		}
 		{
-			#line 62 "httpclient_parser.rl"
+			#line 62 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(mark, p); }
 		
 		goto st6;
@@ -824,7 +824,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr14:
 		{
-			#line 62 "httpclient_parser.rl"
+			#line 62 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(mark, p); }
 		
 		goto st7;
@@ -881,7 +881,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr2:
 		{
-			#line 54 "httpclient_parser.rl"
+			#line 54 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(mark, p); }
 		
 		goto st8;
@@ -981,7 +981,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr26:
 		{
-			#line 90 "httpclient_parser.rl"
+			#line 90 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			if(parser->http_version != NULL)
 			parser->http_version(parser->data, PTR_TO(mark), LEN(mark, p));
@@ -1001,7 +1001,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr27:
 		{
-			#line 54 "httpclient_parser.rl"
+			#line 54 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(mark, p); }
 		
 		goto st17;
@@ -1021,7 +1021,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr28:
 		{
-			#line 83 "httpclient_parser.rl"
+			#line 83 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			parser->status = strtol(PTR_TO(mark), NULL, 10);
 			
@@ -1043,7 +1043,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr30:
 		{
-			#line 54 "httpclient_parser.rl"
+			#line 54 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(mark, p); }
 		
 		goto st19;
@@ -1065,7 +1065,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr45:
 		{
-			#line 72 "httpclient_parser.rl"
+			#line 72 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			if(parser->http_field != NULL) {
 				parser->http_field(parser->data, PTR_TO(field_start), parser->field_len, PTR_TO(mark), LEN(mark, p));
@@ -1075,7 +1075,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		goto st20;
 		ctr32:
 		{
-			#line 78 "httpclient_parser.rl"
+			#line 78 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			if(parser->reason_phrase != NULL)
 			parser->reason_phrase(parser->data, PTR_TO(mark), LEN(mark, p));
@@ -1084,10 +1084,10 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		goto st20;
 		ctr42:
 		{
-			#line 62 "httpclient_parser.rl"
+			#line 62 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(mark, p); }
 		{
-			#line 72 "httpclient_parser.rl"
+			#line 72 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			if(parser->http_field != NULL) {
 				parser->http_field(parser->data, PTR_TO(field_start), parser->field_len, PTR_TO(mark), LEN(mark, p));
@@ -1097,14 +1097,14 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		goto st20;
 		ctr111:
 		{
-			#line 72 "httpclient_parser.rl"
+			#line 72 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			if(parser->http_field != NULL) {
 				parser->http_field(parser->data, PTR_TO(field_start), parser->field_len, PTR_TO(mark), LEN(mark, p));
 			}
 		}
 		{
-			#line 107 "httpclient_parser.rl"
+			#line 107 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			parser->chunked = 1;
 		}
@@ -1112,7 +1112,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		goto st20;
 		ctr113:
 		{
-			#line 107 "httpclient_parser.rl"
+			#line 107 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			parser->chunked = 1;
 		}
@@ -1120,12 +1120,12 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		goto st20;
 		ctr158:
 		{
-			#line 64 "httpclient_parser.rl"
+			#line 64 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			parser->content_len = strtol(PTR_TO(mark), NULL, 10);
 		}
 		{
-			#line 72 "httpclient_parser.rl"
+			#line 72 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			if(parser->http_field != NULL) {
 				parser->http_field(parser->data, PTR_TO(field_start), parser->field_len, PTR_TO(mark), LEN(mark, p));
@@ -1195,18 +1195,18 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr35:
 		{
-			#line 56 "httpclient_parser.rl"
+			#line 56 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(field_start, p); }
 		
 		goto st21;
 		ctr76:
 		{
-			#line 68 "httpclient_parser.rl"
+			#line 68 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			parser->close = 1;
 		}
 		{
-			#line 56 "httpclient_parser.rl"
+			#line 56 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(field_start, p); }
 		
 		goto st21;
@@ -1257,13 +1257,13 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr41:
 		{
-			#line 62 "httpclient_parser.rl"
+			#line 62 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(mark, p); }
 		
 		goto st22;
 		ctr39:
 		{
-			#line 58 "httpclient_parser.rl"
+			#line 58 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			parser->field_len = LEN(field_start, p);
 		}
@@ -1293,7 +1293,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr40:
 		{
-			#line 62 "httpclient_parser.rl"
+			#line 62 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(mark, p); }
 		
 		goto st23;
@@ -1315,7 +1315,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr46:
 		{
-			#line 72 "httpclient_parser.rl"
+			#line 72 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			if(parser->http_field != NULL) {
 				parser->http_field(parser->data, PTR_TO(field_start), parser->field_len, PTR_TO(mark), LEN(mark, p));
@@ -1325,7 +1325,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		goto st24;
 		ctr33:
 		{
-			#line 78 "httpclient_parser.rl"
+			#line 78 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			if(parser->reason_phrase != NULL)
 			parser->reason_phrase(parser->data, PTR_TO(mark), LEN(mark, p));
@@ -1334,10 +1334,10 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		goto st24;
 		ctr43:
 		{
-			#line 62 "httpclient_parser.rl"
+			#line 62 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(mark, p); }
 		{
-			#line 72 "httpclient_parser.rl"
+			#line 72 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			if(parser->http_field != NULL) {
 				parser->http_field(parser->data, PTR_TO(field_start), parser->field_len, PTR_TO(mark), LEN(mark, p));
@@ -1347,12 +1347,12 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		goto st24;
 		ctr159:
 		{
-			#line 64 "httpclient_parser.rl"
+			#line 64 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			parser->content_len = strtol(PTR_TO(mark), NULL, 10);
 		}
 		{
-			#line 72 "httpclient_parser.rl"
+			#line 72 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			if(parser->http_field != NULL) {
 				parser->http_field(parser->data, PTR_TO(field_start), parser->field_len, PTR_TO(mark), LEN(mark, p));
@@ -1373,18 +1373,18 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr36:
 		{
-			#line 56 "httpclient_parser.rl"
+			#line 56 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(field_start, p); }
 		
 		goto st25;
 		ctr77:
 		{
-			#line 68 "httpclient_parser.rl"
+			#line 68 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			parser->close = 1;
 		}
 		{
-			#line 56 "httpclient_parser.rl"
+			#line 56 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(field_start, p); }
 		
 		goto st25;
@@ -1900,13 +1900,13 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr59:
 		{
-			#line 62 "httpclient_parser.rl"
+			#line 62 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(mark, p); }
 		
 		goto st35;
 		ctr58:
 		{
-			#line 58 "httpclient_parser.rl"
+			#line 58 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			parser->field_len = LEN(field_start, p);
 		}
@@ -1942,10 +1942,10 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr60:
 		{
-			#line 62 "httpclient_parser.rl"
+			#line 62 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(mark, p); }
 		{
-			#line 72 "httpclient_parser.rl"
+			#line 72 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			if(parser->http_field != NULL) {
 				parser->http_field(parser->data, PTR_TO(field_start), parser->field_len, PTR_TO(mark), LEN(mark, p));
@@ -2124,7 +2124,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr136:
 		{
-			#line 72 "httpclient_parser.rl"
+			#line 72 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			if(parser->http_field != NULL) {
 				parser->http_field(parser->data, PTR_TO(field_start), parser->field_len, PTR_TO(mark), LEN(mark, p));
@@ -2194,18 +2194,18 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr37:
 		{
-			#line 56 "httpclient_parser.rl"
+			#line 56 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(field_start, p); }
 		
 		goto st44;
 		ctr78:
 		{
-			#line 68 "httpclient_parser.rl"
+			#line 68 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			parser->close = 1;
 		}
 		{
-			#line 56 "httpclient_parser.rl"
+			#line 56 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(field_start, p); }
 		
 		goto st44;
@@ -3068,13 +3068,13 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr96:
 		{
-			#line 62 "httpclient_parser.rl"
+			#line 62 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(mark, p); }
 		
 		goto st61;
 		ctr95:
 		{
-			#line 58 "httpclient_parser.rl"
+			#line 58 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			parser->field_len = LEN(field_start, p);
 		}
@@ -3110,10 +3110,10 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr97:
 		{
-			#line 62 "httpclient_parser.rl"
+			#line 62 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(mark, p); }
 		{
-			#line 72 "httpclient_parser.rl"
+			#line 72 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			if(parser->http_field != NULL) {
 				parser->http_field(parser->data, PTR_TO(field_start), parser->field_len, PTR_TO(mark), LEN(mark, p));
@@ -3212,7 +3212,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr104:
 		{
-			#line 62 "httpclient_parser.rl"
+			#line 62 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(mark, p); }
 		
 		goto st64;
@@ -3330,7 +3330,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr112:
 		{
-			#line 72 "httpclient_parser.rl"
+			#line 72 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			if(parser->http_field != NULL) {
 				parser->http_field(parser->data, PTR_TO(field_start), parser->field_len, PTR_TO(mark), LEN(mark, p));
@@ -3351,7 +3351,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr101:
 		{
-			#line 111 "httpclient_parser.rl"
+			#line 111 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			parser->body_start = p - buffer + 1; 
 			if(parser->header_done != NULL)
@@ -3409,10 +3409,10 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr103:
 		{
-			#line 62 "httpclient_parser.rl"
+			#line 62 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(mark, p); }
 		{
-			#line 56 "httpclient_parser.rl"
+			#line 56 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(field_start, p); }
 		
 		goto st73;
@@ -3781,10 +3781,10 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr98:
 		{
-			#line 62 "httpclient_parser.rl"
+			#line 62 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(mark, p); }
 		{
-			#line 72 "httpclient_parser.rl"
+			#line 72 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			if(parser->http_field != NULL) {
 				parser->http_field(parser->data, PTR_TO(field_start), parser->field_len, PTR_TO(mark), LEN(mark, p));
@@ -3819,7 +3819,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr99:
 		{
-			#line 62 "httpclient_parser.rl"
+			#line 62 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(mark, p); }
 		
 		goto st81;
@@ -3973,7 +3973,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr137:
 		{
-			#line 72 "httpclient_parser.rl"
+			#line 72 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			if(parser->http_field != NULL) {
 				parser->http_field(parser->data, PTR_TO(field_start), parser->field_len, PTR_TO(mark), LEN(mark, p));
@@ -3994,7 +3994,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr64:
 		{
-			#line 111 "httpclient_parser.rl"
+			#line 111 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			parser->body_start = p - buffer + 1; 
 			if(parser->header_done != NULL)
@@ -4052,7 +4052,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr66:
 		{
-			#line 56 "httpclient_parser.rl"
+			#line 56 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(field_start, p); }
 		
 		goto st90;
@@ -4319,10 +4319,10 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr61:
 		{
-			#line 62 "httpclient_parser.rl"
+			#line 62 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(mark, p); }
 		{
-			#line 72 "httpclient_parser.rl"
+			#line 72 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			if(parser->http_field != NULL) {
 				parser->http_field(parser->data, PTR_TO(field_start), parser->field_len, PTR_TO(mark), LEN(mark, p));
@@ -4357,7 +4357,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr62:
 		{
-			#line 62 "httpclient_parser.rl"
+			#line 62 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(mark, p); }
 		
 		goto st96;
@@ -5018,13 +5018,13 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr149:
 		{
-			#line 62 "httpclient_parser.rl"
+			#line 62 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(mark, p); }
 		
 		goto st112;
 		ctr148:
 		{
-			#line 58 "httpclient_parser.rl"
+			#line 58 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			parser->field_len = LEN(field_start, p);
 		}
@@ -5058,10 +5058,10 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr150:
 		{
-			#line 62 "httpclient_parser.rl"
+			#line 62 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(mark, p); }
 		{
-			#line 72 "httpclient_parser.rl"
+			#line 72 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			if(parser->http_field != NULL) {
 				parser->http_field(parser->data, PTR_TO(field_start), parser->field_len, PTR_TO(mark), LEN(mark, p));
@@ -5156,7 +5156,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr157:
 		{
-			#line 62 "httpclient_parser.rl"
+			#line 62 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(mark, p); }
 		
 		goto st115;
@@ -5181,7 +5181,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr154:
 		{
-			#line 111 "httpclient_parser.rl"
+			#line 111 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			parser->body_start = p - buffer + 1; 
 			if(parser->header_done != NULL)
@@ -5233,10 +5233,10 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr156:
 		{
-			#line 62 "httpclient_parser.rl"
+			#line 62 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(mark, p); }
 		{
-			#line 56 "httpclient_parser.rl"
+			#line 56 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(field_start, p); }
 		
 		goto st117;
@@ -5293,10 +5293,10 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr151:
 		{
-			#line 62 "httpclient_parser.rl"
+			#line 62 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(mark, p); }
 		{
-			#line 72 "httpclient_parser.rl"
+			#line 72 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			
 			if(parser->http_field != NULL) {
 				parser->http_field(parser->data, PTR_TO(field_start), parser->field_len, PTR_TO(mark), LEN(mark, p));
@@ -5329,7 +5329,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		}
 		ctr152:
 		{
-			#line 62 "httpclient_parser.rl"
+			#line 62 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 			MARK(mark, p); }
 		
 		goto st119;
@@ -5480,7 +5480,7 @@ int httpclient_parser_execute(httpclient_parser *parser, const char *buffer, siz
 		_out: {}
 	}
 	
-	#line 203 "httpclient_parser.rl"
+	#line 203 "/data/workspace/ServerDemo/sylar/http/httpclient_parser.rl"
 	
 	
 	parser->cs = cs;

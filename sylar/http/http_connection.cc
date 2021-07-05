@@ -1,6 +1,7 @@
 #include "http_connection.h"
 #include "http_parser.h"
 #include "sylar/log.h"
+#include "sylar/uri.h"
 
 namespace sylar
 {
@@ -187,6 +188,170 @@ int HttpConnection::sendRequest(HttpRequest::ptr req)
     ss << *req;
     std::string data = ss.str();
     return writeFixSize(data.c_str(), data.size());
+}
+
+//get 一般不加body，但严格意义上也没有说一定不能加
+HttpResult::ptr HttpConnection::DoGet(const std::string& url
+                                , uint64_t timeout_ms
+                                , const std::map<std::string, std::string>& headers
+                                , const std::string& body)
+{
+    Uri::ptr uri = Uri::Create(url);
+    if(!uri)
+    {
+        return std::make_shared<HttpResult>((int)HttpResult::Error::INVALID_URL
+                                            , nullptr
+                                            , "invalid url: " + url);
+    }
+
+    return DoGet(uri, timeout_ms, headers, body);
+}
+
+//uri 很可能在请求开始的时候，就检测有无问题了。所以真正请求的时候，很可能已经有了现成的uri
+//这样就不必再用string转换一次
+HttpResult::ptr HttpConnection::DoGet(Uri::ptr uri
+                                , uint64_t timeout_ms
+                                , const std::map<std::string, std::string>& headers
+                                , const std::string& body)
+{
+    return DoRequest(HttpMethod::GET, uri, timeout_ms, headers, body);
+}
+
+HttpResult::ptr HttpConnection::DoPost(const std::string& url
+                                , uint64_t timeout_ms
+                                , const std::map<std::string, std::string>& headers
+                                , const std::string& body)
+{
+    Uri::ptr uri = Uri::Create(url);
+    if(!uri)
+    {
+        return std::make_shared<HttpResult>((int)HttpResult::Error::INVALID_URL
+                                            , nullptr
+                                            , "invalid url: " + url);
+    }
+
+    return DoPost(uri, timeout_ms, headers, body);
+}
+
+HttpResult::ptr HttpConnection::DoPost(Uri::ptr uri
+                                , uint64_t timeout_ms
+                                , const std::map<std::string, std::string>& headers
+                                , const std::string& body)
+{
+    return DoRequest(HttpMethod::POST, uri, timeout_ms, headers, body);
+}
+
+//前三个数都是经常用的
+HttpResult::ptr HttpConnection::DoRequest(HttpMethod method
+                                , const std::string& url
+                                , uint64_t timeout_ms
+                                //cookies 是 header 的一部分，就不抽出来了，不然太多
+                                , const std::map<std::string, std::string>& headers
+                                , const std::string& body)
+{
+    Uri::ptr uri = Uri::Create(url);
+    if(!uri)
+    {
+        return std::make_shared<HttpResult>((int)HttpResult::Error::INVALID_URL
+                                            , nullptr
+                                            , "invalid url: " + url);
+    }
+
+    return DoRequest(method, uri, timeout_ms, headers, body);
+}
+
+HttpResult::ptr HttpConnection::DoRequest(HttpMethod method
+                                , Uri::ptr uri
+                                , uint64_t timeout_ms
+                                //cookies 是 header 的一部分，就不抽出来了，不然太多
+                                , const std::map<std::string, std::string>& headers
+                                , const std::string& body)
+{
+    HttpRequest::ptr req = std::make_shared<HttpRequest>();
+    req->setPath(uri->getPath());
+    req->setMethod(method);
+    bool has_host = false;
+    for(auto& i : headers)
+    {
+        if(strcasecmp(i.first.c_str(), "connection") == 0)
+        {
+            if(strcasecmp(i.second.c_str(), "keep-alive") == 0)
+            {
+                req->setClose(false);
+            }
+            continue;
+        }
+
+        if(!has_host && strcasecmp(i.first.c_str(), "host") == 0)
+        {
+            has_host = !i.second.empty();
+        }
+
+        req->setHeader(i.first, i.second);
+    }
+    if(has_host)
+    {
+        req->setHeader("Host", uri->getHost());
+    }
+
+    req->setBody(body);
+    return DoRequest(req, uri, timeout_ms);
+}
+
+HttpResult::ptr HttpConnection::DoRequest(HttpRequest::ptr req
+                                    , Uri::ptr uri //只提取出地址信息
+                                    , uint64_t timeout_ms)
+{
+    Address::ptr addr = uri->createAddress();
+    if(!addr)
+    {
+        return std::make_shared<HttpResult>((int)HttpResult::Error::INVALID_HOST, nullptr
+                                            , "invalid host: " + uri->getHost());
+    }
+
+    Socket::ptr sock = Socket::CreateTCP(addr);
+    if(!sock)
+    {
+        return std::make_shared<HttpResult>((int)HttpResult::Error::CONNECT_FAIL, nullptr
+                                            , "create fail: " + addr->toString()
+                                            + " errno=" + std::to_string(errno)
+                                            + " errstr=" + std::string(strerror(errno)));
+    }
+    
+    //先connect！
+    if(!sock->connect(addr))
+    {
+        return std::make_shared<HttpResult>((int)HttpResult::Error::CONNECT_FAIL, nullptr
+                                            , "connect fail: " + addr->toString());
+    }
+
+    sock->setRecvTimeout(timeout_ms);
+    HttpConnection::ptr conn = std::make_shared<HttpConnection>(sock);
+
+    int rt = conn->sendRequest(req);
+    //没写进去，所以是远端关闭的
+    if(rt == 0)
+    {
+        return std::make_shared<HttpResult>((int)HttpResult::Error::SEND_CLOSE_BY_PEER, nullptr
+                                            , "send request close by peer: " + addr->toString());
+    }
+    else if(rt < 0)
+    {
+        return std::make_shared<HttpResult>((int)HttpResult::Error::SEND_SOCKET_ERROR, nullptr
+                                            , "send request socket error, errno= " + std::to_string(errno)
+                                                + " errstr=" + std::string(strerror(errno)));
+    }
+
+    auto rsp = conn->recvResponse();
+    if(!rsp)
+    {
+        //先简单的认为都是超时。但其实还是要区分一下，是超时，还是被远端关闭的等等，很多错误类型
+        return std::make_shared<HttpResult>((int)HttpResult::Error::TIMEOUT, nullptr
+                                            , "recv response timeout: " + addr->toString()
+                                                + " timeout_ms:" + std::to_string(timeout_ms));
+    }
+
+    return std::make_shared<HttpResult>((int)HttpResult::Error::OK, rsp, "ok");
 }
 
 }
