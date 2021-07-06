@@ -107,10 +107,10 @@ static ssize_t do_io(int fd, OriginFun fun, const char* hook_func_name,
     }
 
     sylar::FdCtx::ptr ctx = sylar::FdMgr::GetInstance()->get(fd);
-    SYLAR_LOG_INFO(g_logger) << "do io before, " << hook_func_name << ",fd=" << fd;
+    // SYLAR_LOG_INFO(g_logger) << "do io before, " << hook_func_name << ",fd=" << fd;
     if(!ctx)
     {
-        SYLAR_LOG_INFO(g_logger) << "ds!!!!!" << hook_func_name << ",fd=" << fd;
+        // SYLAR_LOG_INFO(g_logger) << "ds!!!!!" << hook_func_name << ",fd=" << fd;
 
         //如果不存在，就当作不是 socket，也同样得按照原来的io操作来做
         //因为我们只hook住了 socket
@@ -208,7 +208,7 @@ retry:
             goto retry;
         }
     }
-    SYLAR_LOG_INFO(g_logger) << "read n=" << n;
+    // SYLAR_LOG_INFO(g_logger) << "read n=" << n;
     //当读到数据后，返回N
     return n;
 }

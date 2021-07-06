@@ -9,10 +9,26 @@ namespace http
 {
 static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
 
+std::string HttpResult::toString() const
+{
+    std::stringstream ss;
+    ss << "[HttpResult result=" << result
+        << " error=" << error
+        << " response=" << (response ? response->toString() : "nullptr")
+        << "]";
+
+    return ss.str();
+}
+
 HttpConnection::HttpConnection(Socket::ptr sock, bool owner)
     :SocketStream(sock, owner)
 {
 
+}
+
+HttpConnection::~HttpConnection()
+{
+    SYLAR_LOG_DEBUG(g_logger) << "HttpConnection::~HttpConnection ";
 }
 
 HttpResponse::ptr HttpConnection::recvResponse()
@@ -269,6 +285,8 @@ HttpResult::ptr HttpConnection::DoRequest(HttpMethod method
 {
     HttpRequest::ptr req = std::make_shared<HttpRequest>();
     req->setPath(uri->getPath());
+    req->setQuery(uri->getQuery());
+    req->setFragment(uri->getFragment());
     req->setMethod(method);
     bool has_host = false;
     for(auto& i : headers)
@@ -289,7 +307,7 @@ HttpResult::ptr HttpConnection::DoRequest(HttpMethod method
 
         req->setHeader(i.first, i.second);
     }
-    if(has_host)
+    if(!has_host)
     {
         req->setHeader("Host", uri->getHost());
     }
@@ -312,7 +330,7 @@ HttpResult::ptr HttpConnection::DoRequest(HttpRequest::ptr req
     Socket::ptr sock = Socket::CreateTCP(addr);
     if(!sock)
     {
-        return std::make_shared<HttpResult>((int)HttpResult::Error::CONNECT_FAIL, nullptr
+        return std::make_shared<HttpResult>((int)HttpResult::Error::CREATE_SOCKET_ERROR, nullptr
                                             , "create fail: " + addr->toString()
                                             + " errno=" + std::to_string(errno)
                                             + " errstr=" + std::string(strerror(errno)));
@@ -348,6 +366,264 @@ HttpResult::ptr HttpConnection::DoRequest(HttpRequest::ptr req
         //先简单的认为都是超时。但其实还是要区分一下，是超时，还是被远端关闭的等等，很多错误类型
         return std::make_shared<HttpResult>((int)HttpResult::Error::TIMEOUT, nullptr
                                             , "recv response timeout: " + addr->toString()
+                                                + " timeout_ms:" + std::to_string(timeout_ms));
+    }
+
+    return std::make_shared<HttpResult>((int)HttpResult::Error::OK, rsp, "ok");
+}
+
+// Pool
+HttpConnectionPool::HttpConnectionPool(const std::string& host
+                        , const std::string& vhost
+                        , uint32_t port
+                        , uint32_t max_size
+                        , uint32_t max_alive_time
+                        , uint32_t max_request)
+    :m_host(host)
+    ,m_vhost(vhost)
+    ,m_port(port)
+    ,m_maxSize(max_size)
+    ,m_maxAliveTime(max_alive_time)
+    ,m_maxRequest(max_request)
+{
+
+}
+
+HttpConnection::ptr HttpConnectionPool::getConnection()
+{
+    uint64_t now_ms = sylar::GetCurrentMS();
+    std::vector<HttpConnection*> invalid_conns;
+    HttpConnection* ptr = nullptr;
+    MutexType::Lock lock(m_mutex);
+    while(!m_conns.empty())
+    {
+        auto conn = *m_conns.begin();
+        m_conns.pop_front();
+        if(!conn->isConnected())
+        {
+            //不链接，惰性删除
+            invalid_conns.push_back(conn);
+            continue;
+        }
+        if((conn->m_createTime + m_maxAliveTime) > now_ms)
+        {
+            invalid_conns.push_back(conn);
+            continue;
+        }
+        ptr = conn;
+        break;
+    }
+    lock.unlock();
+    for(auto i : invalid_conns)
+    {
+        delete i;
+    }
+    m_total -= invalid_conns.size();
+
+    if(!ptr)
+    {
+        IPAddress::ptr addr = Address::LookupAnyIPAddress(m_host);
+        if(!addr)
+        {
+            SYLAR_LOG_ERROR(g_logger) << "get addr fail: " << m_host;
+            return nullptr;
+        }
+        addr->setPort(m_port);
+
+        Socket::ptr sock = Socket::CreateTCP(addr);
+        if(!sock)
+        {
+            SYLAR_LOG_ERROR(g_logger) << "create socket fail: " << *addr;
+            return nullptr;
+        }
+
+        if(!sock->connect(addr))
+        {
+            SYLAR_LOG_ERROR(g_logger) << "socket connect fail: " << *addr;
+            return nullptr;
+        }
+
+        ptr = new HttpConnection(sock);
+        ++ m_total;
+    }
+    //自定义释放方式
+    return HttpConnection::ptr(ptr, std::bind(&HttpConnectionPool::ReleasePtr
+                                , std::placeholders::_1, this));
+}
+
+void HttpConnectionPool::ReleasePtr(HttpConnection* ptr, HttpConnectionPool* pool)
+{
+    ++ptr->m_request;
+    if(!ptr->isConnected()
+        || ptr->m_createTime + pool->m_maxAliveTime >= sylar::GetCurrentMS()
+        || ptr->m_request >= pool->m_maxRequest)
+    {
+        delete ptr;
+        --pool->m_total;
+        return;
+    }
+
+    //枷锁，放回去
+    MutexType::Lock look(pool->m_mutex);
+    pool->m_conns.push_back(ptr);
+}
+
+//类似 connection，uri 跟上面的意义不是一致的，host部分没得改
+HttpResult::ptr HttpConnectionPool::doGet(const std::string& url
+                                , uint64_t timeout_ms
+                                , const std::map<std::string, std::string>& headers
+                                , const std::string& body)
+{
+    return doRequest(HttpMethod::GET, url, timeout_ms, headers, body);
+}
+
+HttpResult::ptr HttpConnectionPool::doGet(Uri::ptr uri
+                                , uint64_t timeout_ms
+                                , const std::map<std::string, std::string>& headers
+                                , const std::string& body)
+{
+    //跟connection 反着来
+    //除了host部分的uri
+    std::stringstream ss;
+    ss << uri->getPath()
+        << (uri->getQuery().empty() ? "" : "?")
+        << uri->getQuery()
+        << (uri->getFragment().empty() ? "" : "#")
+        << uri->getFragment();
+    return doGet(ss.str(), timeout_ms, headers, body);
+}
+
+HttpResult::ptr HttpConnectionPool::doPost(const std::string& url
+                                , uint64_t timeout_ms
+                                , const std::map<std::string, std::string>& headers
+                                , const std::string& body)
+{
+    return doRequest(HttpMethod::POST, url, timeout_ms, headers, body);
+}
+
+HttpResult::ptr HttpConnectionPool::doPost(Uri::ptr uri
+                                , uint64_t timeout_ms
+                                , const std::map<std::string, std::string>& headers
+                                , const std::string& body)
+{
+    //跟connection 反着来
+    //除了host部分的uri
+    std::stringstream ss;
+    ss << uri->getPath()
+        << (uri->getQuery().empty() ? "" : "?")
+        << uri->getQuery()
+        << (uri->getFragment().empty() ? "" : "#")
+        << uri->getFragment();
+    return doPost(ss.str(), timeout_ms, headers, body);
+}
+
+//前三个数都是经常用的
+HttpResult::ptr HttpConnectionPool::doRequest(HttpMethod method
+                                , const std::string& url
+                                , uint64_t timeout_ms
+                                //cookies 是 header 的一部分，就不抽出来了，不然太多
+                                , const std::map<std::string, std::string>& headers
+                                , const std::string& body)
+{
+    HttpRequest::ptr req = std::make_shared<HttpRequest>();
+    //只需要 path，自己的便利性.qeury 这些自己再解析
+    req->setPath(url);
+    req->setMethod(method);
+    //keep-alive，否则发一个就断掉，就没池的意义
+    req->setClose(false);
+    bool has_host = false;
+    for(auto& i : headers)
+    {
+        if(strcasecmp(i.first.c_str(), "connection") == 0)
+        {
+            if(strcasecmp(i.second.c_str(), "keep-alive") == 0)
+            {
+                req->setClose(false);
+            }
+            continue;
+        }
+
+        if(!has_host && strcasecmp(i.first.c_str(), "host") == 0)
+        {
+            has_host = !i.second.empty();
+        }
+
+        req->setHeader(i.first, i.second);
+    }
+    if(!has_host)
+    {
+        if(m_vhost.empty())
+        {
+            req->setHeader("Host", m_host);
+        }
+        else
+        {
+            req->setHeader("Host", m_vhost);
+        }
+    }
+
+    req->setBody(body);
+    return doRequest(req, timeout_ms);
+}
+
+HttpResult::ptr HttpConnectionPool::doRequest(HttpMethod method
+                                , Uri::ptr uri
+                                , uint64_t timeout_ms
+                                //cookies 是 header 的一部分，就不抽出来了，不然太多
+                                , const std::map<std::string, std::string>& headers
+                                , const std::string& body)
+{
+    //跟connection 反着来
+    //除了host部分的uri
+    std::stringstream ss;
+    ss << uri->getPath()
+        << (uri->getQuery().empty() ? "" : "?")
+        << uri->getQuery()
+        << (uri->getFragment().empty() ? "" : "#")
+        << uri->getFragment();
+    return doRequest(method, ss.str(), timeout_ms, headers, body);
+}
+
+//特别抽出来是因为，有些场景需要用到这样的接口，比如常用在转发
+//uri 只是链接用的，链接池里已经有链接信息了，所以不需要了
+HttpResult::ptr HttpConnectionPool::doRequest(HttpRequest::ptr req
+                                , uint64_t timeout_ms)
+{
+    auto conn = getConnection();
+    if(!conn)
+    {
+        return std::make_shared<HttpResult>((int)HttpResult::Error::POOL_GET_CONNECTION, nullptr
+                                            , "pool fail host: " + m_host + " post:" + std::to_string(m_port));
+    }
+
+    auto sock = conn->getSocket();
+    if(!sock)
+    {
+        return std::make_shared<HttpResult>((int)HttpResult::Error::POOL_INVALID_CONNECTION, nullptr
+                                            , "pool invalid connection host: " + m_host + " post:" + std::to_string(m_port));
+    }
+    sock->setRecvTimeout(timeout_ms);
+
+    int rt = conn->sendRequest(req);
+    //没写进去，所以是远端关闭的
+    if(rt == 0)
+    {
+        return std::make_shared<HttpResult>((int)HttpResult::Error::SEND_CLOSE_BY_PEER, nullptr
+                                            , "send request close by peer: " + sock->getRemoteAddress()->toString());
+    }
+    else if(rt < 0)
+    {
+        return std::make_shared<HttpResult>((int)HttpResult::Error::SEND_SOCKET_ERROR, nullptr
+                                            , "send request socket error, errno= " + std::to_string(errno)
+                                                + " errstr=" + std::string(strerror(errno)));
+    }
+
+    auto rsp = conn->recvResponse();
+    if(!rsp)
+    {
+        //先简单的认为都是超时。但其实还是要区分一下，是超时，还是被远端关闭的等等，很多错误类型
+        return std::make_shared<HttpResult>((int)HttpResult::Error::TIMEOUT, nullptr
+                                            , "recv response timeout: " + sock->getRemoteAddress()->toString()
                                                 + " timeout_ms:" + std::to_string(timeout_ms));
     }
 
