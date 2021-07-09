@@ -128,7 +128,7 @@ Fiber::~Fiber()
         }
     }
 
-    SYLAR_LOG_INFO(g_logger) << "fiber destory " << m_id;
+    SYLAR_LOG_DEBUG(g_logger) << "fiber destory " << m_id;
 }
 
 void Fiber::reset(std::function<void()> cb)
@@ -327,7 +327,7 @@ void Fiber::CallerMainFunc()
     auto raw_ptr = cur.get();
     cur.reset();
 
-    SYLAR_LOG_INFO(g_logger) << "Fiber main func end root_fiber." << raw_ptr->getId();
+    SYLAR_LOG_DEBUG(g_logger) << "Fiber main func end root_fiber." << raw_ptr->getId();
 
     //回到主协程，虽然也可以只限定 uc_link 来解决。但既然已经封装了，就不用这个了
     //唯一的区别。。

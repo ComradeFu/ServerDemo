@@ -172,7 +172,6 @@ void Scheduler::stop()
         //哎，暂时不知道有甚么意义
         if(!stopping())
         {
-            SYLAR_LOG_INFO(g_logger) << "root fiber calling";
             m_rootFiber->call();
         }
     }
@@ -304,7 +303,7 @@ void Scheduler::run()
             ft.reset();
 
             // ++m_activeThreadCount;
-            SYLAR_LOG_INFO(g_logger) << "Fiber swaping , fiber id=" << cb_fiber->getId();
+            SYLAR_LOG_DEBUG(g_logger) << "Fiber swaping , fiber id=" << cb_fiber->getId();
             cb_fiber->swapIn();
             --m_activeThreadCount;
 

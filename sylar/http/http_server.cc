@@ -26,7 +26,7 @@ void HttpServer::handleClient(Socket::ptr client)
             //恶意攻击的比较多的话，也不至于是错误先
             SYLAR_LOG_WARN(g_logger) << "recv http request fail, errno="
                     << errno << " errorstr=" << strerror(errno)
-                    << " client:" << client;
+                    << " client:" << *client << " keep_alive=" << m_isKeepalive;
             break;
         }
 
@@ -46,7 +46,11 @@ void HttpServer::handleClient(Socket::ptr client)
         //传入 session 只是用来做上下文的判断，比如cookie，或者session（http意义上的）
         session->sendResponse(rsp);
 
-    } while(m_isKeepalive);
+        if(!m_isKeepalive || req->isClose()) {
+            break;
+        }
+
+    } while(true);
 
     session->close();
 }
