@@ -1,6 +1,8 @@
 #ifndef __SYLAR_SINGLETON_H__
 #define __SYLAR_SINGLETON_H__
 
+#include <memory>
+
 namespace sylar {
 
 //N 是为了防止，少数情况下，确实是一个类，但有两个实例。算是单例的一种变通
