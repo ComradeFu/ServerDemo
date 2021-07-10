@@ -30,6 +30,8 @@ public:
 
     bool setEnv(const std::string& key, const std::string& val);
     std::string getEnv(const std::string& key, const std::string& default_val = "");
+
+    std::string getAbsolutePath(const std::string& path) const;
 private:
     RWMutexType m_mutex;
     //后续还会有文件系统的api，执行的上下文

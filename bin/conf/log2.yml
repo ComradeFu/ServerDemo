@@ -4,4 +4,3 @@ logs:
     appenders:
       - type: FileLogAppender
         file: mutex.txt
-

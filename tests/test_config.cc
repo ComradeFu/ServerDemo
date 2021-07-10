@@ -1,5 +1,6 @@
 #include "../sylar/config.h"
 #include "../sylar/log.h"
+#include "sylar/env.h"
 #include <yaml-cpp/yaml.h>
 #include <iostream>
 
@@ -232,6 +233,11 @@ void test_log()
     std::cout << sylar::LoggerMgr::GetInstance()->toYamlString() << std::endl;
 }
 
+void test_loadconf()
+{
+    sylar::Config::LoadFromConfDir("conf");
+}
+
 int main(int argc, char ** argv) {
     // SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << g_int_value_config->getValue();
     // SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << g_int_value_config->toString();
@@ -241,14 +247,19 @@ int main(int argc, char ** argv) {
 
     // test_class();
 
-    test_log();
+    // test_log();
 
-    sylar::Config::Visit([](sylar::ConfigVarBase::ptr var)
-    {
-        SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "name=" << var->getName()
-                << " description=" << var->getDescription()
-                << " typename=" << var->getTypeName()
-                << " value=" << var->toString();
-    });
+    sylar::EnvMgr::GetInstance()->init(argc, argv);
+    test_loadconf();
+    std::cout << " ========= " << std::endl;
+    test_loadconf();
+
+    // sylar::Config::Visit([](sylar::ConfigVarBase::ptr var)
+    // {
+    //     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "name=" << var->getName()
+    //             << " description=" << var->getDescription()
+    //             << " typename=" << var->getTypeName()
+    //             << " value=" << var->toString();
+    // });
     return 0;
 }

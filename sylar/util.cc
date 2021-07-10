@@ -4,6 +4,9 @@
 #include "log.h"
 #include "fiber.h"
 #include <sys/time.h>
+#include <dirent.h>
+#include <unistd.h>
+#include <string.h>
 
 namespace sylar {
 
@@ -85,6 +88,60 @@ std::string Time2Str(time_t ts, const std::string& format)
     strftime(buf, sizeof(buf), format.c_str(), &tm);
     
     return buf;
+}
+
+void FSUtil::ListAllFile(std::vector<std::string>& files
+                                , const std::string& path
+                                , const std::string& subfix)
+{
+    //C++11 的支持可能还不够，所以先用linux内核提供的接口
+    if(access(path.c_str(), 0) != 0)
+    {
+        //不存在这个文件夹路径
+        return;
+    }
+
+    DIR* dir = opendir(path.c_str());
+    if(dir == nullptr)
+    {
+        //打开失败
+        return;
+    }
+
+    struct dirent* dp = nullptr;
+    while((dp = readdir(dir)) != nullptr)
+    {
+        if(dp->d_type == DT_DIR)
+        {
+            //过滤掉当前跟上一层
+            if(!strcmp(dp->d_name, ".") || !strcmp(dp->d_name, ".."))
+                continue;
+            ListAllFile(files, path + "/" + dp->d_name, subfix);
+        }
+        else if(dp->d_type == DT_REG)
+        {
+            //正常的文件
+            std::string filename(dp->d_name);
+            if(subfix.empty())
+            {
+                files.push_back(path + "/" + filename);
+            }
+            else
+            {
+                if(filename.size() < subfix.size())
+                {
+                    continue;
+                }
+                if(filename.substr(filename.length() - subfix.size()) == subfix)
+                {
+                    //简单的以这个结尾，就当作是成立了
+                    files.push_back(path + "/" + filename);
+                }
+            }
+        }
+    }
+
+    closedir(dir);
 }
 
 }

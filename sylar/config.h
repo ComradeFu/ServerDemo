@@ -547,6 +547,7 @@ namespace sylar
         }
 
         static void LoadFromYaml(const YAML::Node &root);
+        static void LoadFromConfDir(const std::string &path);
 
         //不需要T的Base方法
         static ConfigVarBase::ptr LookupBase(const std::string &name);

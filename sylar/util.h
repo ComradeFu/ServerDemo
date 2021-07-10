@@ -27,6 +27,16 @@ uint64_t GetCurrentMS();
 uint64_t GetCurrentUS();
 
 std::string Time2Str(time_t ts = time(0), const std::string& format = "%Y-%m-%d %H:%M:%S");
+
+//跟文件有关的util
+class FSUtil
+{
+public:
+    //subfix 后缀名
+    static void ListAllFile(std::vector<std::string>& files
+                                , const std::string& path
+                                , const std::string& subfix);
+};
 }
 
 #endif
