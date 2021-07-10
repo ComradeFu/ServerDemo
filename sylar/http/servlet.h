@@ -100,6 +100,9 @@ public:
     int32_t handle(sylar::http::HttpRequest::ptr request
                 , sylar::http::HttpResponse::ptr response
                 , sylar::http::HttpSession::ptr session) override;
+
+private:
+    std::string m_serverName;
 };
 
 //以后可能还可以提供，上传、下载服务Servlet

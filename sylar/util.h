@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <vector>
 #include <string>
+#include <dirent.h>
 
 namespace sylar {
 
@@ -36,6 +37,8 @@ public:
     static void ListAllFile(std::vector<std::string>& files
                                 , const std::string& path
                                 , const std::string& subfix);
+    static bool Mkdir(const std::string& dirname);
+    static bool IsRunningPidfile(const std::string& pidfile);
 };
 }
 

@@ -1,0 +1,9 @@
+http_servers:
+  - address: ["0.0.0.0:8001"]
+    keepalive: 1
+    timeout: 1000
+    name: custom/1.2
+  - address: ["0.0.0.0:8002"]
+    keepalive: 1
+    timeout: 1000
+    name: custom/2.0
