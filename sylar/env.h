@@ -24,6 +24,12 @@ public:
     void addHelp(const std::string& key, const std::string& desc);
     void removeHelp(const std::string& key);
     void printHelp();
+
+    const std::string& getExe() const { return m_exe; }
+    const std::string& getCwd() const { return m_cwd; }
+
+    bool setEnv(const std::string& key, const std::string& val);
+    std::string getEnv(const std::string& key, const std::string& default_val = "");
 private:
     RWMutexType m_mutex;
     //后续还会有文件系统的api，执行的上下文
@@ -32,6 +38,8 @@ private:
 
     //程序名
     std::string m_program;
+    std::string m_exe; //可执行文件的绝对的路径
+    std::string m_cwd; //exe所在的文件夹
 };
 
 typedef Singleton<Env> EnvMgr;
