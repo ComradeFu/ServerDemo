@@ -33,6 +33,9 @@ static int real_start(int argc, char** argv
 static int real_daemon(int argc, char** argv
                         , std::function<int(int argc, char** argv)> main_cb)
 {
+    //库函数，第二个参数是标准输出输入流是否要关闭，一般是要关闭的
+    daemon(1, 0);
+
     //记录自己的信息
     ProcessInfoMgr::GetInstance()->parent_id = getpid();
     ProcessInfoMgr::GetInstance()->parent_start_time = time(0);

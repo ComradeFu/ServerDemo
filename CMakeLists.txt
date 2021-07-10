@@ -23,6 +23,7 @@ link_directories(/usr/local/lib64/)
 
 set(LIB_SRC 
     sylar/log.cc
+    sylar/env.cc
     sylar/daemon.cc
     sylar/stream.cc
     sylar/socket_stream.cc
@@ -168,6 +169,11 @@ add_executable(test_daemon tests/test_daemon.cc)
 add_dependencies(test_daemon sylar)
 target_link_libraries(test_daemon ${LIB_LIB})
 force_redefine_file_macro_for_sources(test_daemon)
+
+add_executable(test_env tests/test_env.cc)
+add_dependencies(test_env sylar)
+target_link_libraries(test_env ${LIB_LIB})
+force_redefine_file_macro_for_sources(test_env)
 
 add_executable(echo_server examples/echo_server.cc)
 add_dependencies(echo_server sylar)
